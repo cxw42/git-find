@@ -83,9 +83,9 @@ while(my $line = <$fh>) {
 
     next if $line =~ /INTRODUCTION/;    # Don't need this header.
 
-#    # Skip the internals
-#    $output .= $line if $line =~ /AUTHOR/;
-#    next if ($line =~ /INTERNALS/)..($line =~ /AUTHOR/);
+    # Skip the internals
+    $output .= $line if $line =~ /AUTHOR/;
+    next if ($line =~ /INTERNALS/)..($line =~ /AUTHOR/);
 
     $output .= $line;   # Copy everything that's left.
 }

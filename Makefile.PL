@@ -189,6 +189,7 @@ my %opts = (
         #'File::Spec' => '0',
         #'File::stat' => '0',
         #'File::Which' => '1.22',    # for msys2 support
+        'Git' => '0.40',
         #'Hash::Merge' => '0.299',
         #'Hash::Ordered' => '0.011',
         #'Import::Into' => '0',

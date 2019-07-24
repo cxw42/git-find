@@ -1,9 +1,5 @@
-# App::GitFind - The great new App::GitFind!
+# App::GitFind - Find files anywhere in a Git repository
 
-
-# VERSION
-
-Version 0.01
 
 # SYNOPSIS
 
@@ -12,56 +8,24 @@ Quick summary of what the module does.
 Perhaps a little code snippet.
 
     use App::GitFind;
+    exit App::GitFind->new(\@ARGV)->run;
 
-    my $foo = App::GitFind->new();
-    ...
-
-# EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+See [git-find](https://metacpan.org/pod/git-find) for more usage information.
 
 # SUBROUTINES/METHODS
 
-## function1
+## new
 
-## function2
+The constructor.  Takes an arrayref of arguments, e.g., `\@ARGV`.  May
+`exit()`, e.g., on `--help`.
+
+## run
+
+Does the work.
 
 # AUTHOR
 
 Christopher White, `<cxw at cpan.org>`
-
-# BUGS
-
-Please report any bugs or feature requests to `bug-app-gitfind at rt.cpan.org`, or through
-the web interface at [https://rt.cpan.org/NoAuth/ReportBug.html?Queue=App-GitFind](https://rt.cpan.org/NoAuth/ReportBug.html?Queue=App-GitFind).  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-# SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc App::GitFind
-
-You can also look for information at:
-
-- RT: CPAN's request tracker (report bugs here)
-
-    [https://rt.cpan.org/NoAuth/Bugs.html?Dist=App-GitFind](https://rt.cpan.org/NoAuth/Bugs.html?Dist=App-GitFind)
-
-- AnnoCPAN: Annotated CPAN documentation
-
-    [http://annocpan.org/dist/App-GitFind](http://annocpan.org/dist/App-GitFind)
-
-- CPAN Ratings
-
-    [https://cpanratings.perl.org/d/App-GitFind](https://cpanratings.perl.org/d/App-GitFind)
-
-- Search CPAN
-
-    [https://metacpan.org/release/App-GitFind](https://metacpan.org/release/App-GitFind)
-
-# ACKNOWLEDGEMENTS
 
 # LICENSE AND COPYRIGHT
 
@@ -85,6 +49,7 @@ included in all copies or substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
 NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
 HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING

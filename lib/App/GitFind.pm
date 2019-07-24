@@ -1,21 +1,23 @@
 package App::GitFind;
 
-use 5.006;
+use 5.010;
 use strict;
 use warnings;
 
+use Getopt::Long 2.34 qw(GetOptionsFromArray :config),
+    qw(auto_help auto_version),     # handle -?, --help, --version
+    qw(passthrough require_order),  # stop at the first unrecognized.  TODO
+    qw(no_getopt_compat gnu_compat bundling);   # --foo, -x, no +x
+
+use Git;
+
+our $VERSION = '0.000001';
+
+# === Documentation === {{{1
+
 =head1 NAME
 
-App::GitFind - The great new App::GitFind!
-
-=head1 VERSION
-
-Version 0.01
-
-=cut
-
-our $VERSION = '0.01';
-
+App::GitFind - Find files anywhere in a Git repository
 
 =head1 SYNOPSIS
 
@@ -24,76 +26,79 @@ Quick summary of what the module does.
 Perhaps a little code snippet.
 
     use App::GitFind;
+    exit App::GitFind->new(\@ARGV)->run;
 
-    my $foo = App::GitFind->new();
-    ...
-
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+See L<git-find> for more usage information.
 
 =head1 SUBROUTINES/METHODS
 
-=head2 function1
+=cut
+
+# }}}1
+
+=head2 new
+
+The constructor.  Takes an arrayref of arguments, e.g., C<\@ARGV>.  May
+C<exit()>, e.g., on C<--help>.
 
 =cut
 
-sub function1 {
-}
+sub new {
+    my ($package, $lrArgv) = @_;
+    my $self = _process_options($lrArgv);
+    bless $self, $package;
+} #new()
 
-=head2 function2
+=head2 run
+
+Does the work.
 
 =cut
 
-sub function2 {
-}
+sub run {
+    my $repo = Git->repository('.');
+    use Data::Dumper;
+    say "Repo: ", Dumper $repo;
+} #new()
+
+=head1 INTERNALS
+
+=head2 _process_options
+
+Process the options and return a hashref.  Any remaining arguments are
+stored under key C<_>.
+
+=cut
+
+sub _process_options {
+    my $lrArgv = shift // [];
+    my %opts;
+
+    # uncoverable branch true
+    GetOptionsFromArray($lrArgv, \%opts, qw(h man v))
+        or die 'Error while processing global options';
+        # At present, this always succeeds, because it is configured to simply
+        # stop at the first unrecognized option, and because none of the
+        # options have coderefs or validation.
+    $opts{_} = $lrArgv if @$lrArgv;
+
+    Getopt::Long::HelpMessage(-exitval => 0, -verbose => 2) if $opts{man};
+    Getopt::Long::HelpMessage(-exitval => 0) if $opts{h};
+    Getopt::Long::VersionMessage(-exitval => 0) if $opts{v};
+
+    #Getopt::Long::HelpMessage(-exitval => 2) unless @$lrArgv;
+
+    return \%opts;
+} #_process_options
+
+1; # End of App::GitFind
+__END__
+
+# === Rest of the docs === {{{1
 
 =head1 AUTHOR
 
 Christopher White, C<< <cxw at cpan.org> >>
-
-=head1 BUGS
-
-Please report any bugs or feature requests to C<bug-app-gitfind at rt.cpan.org>, or through
-the web interface at L<https://rt.cpan.org/NoAuth/ReportBug.html?Queue=App-GitFind>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc App::GitFind
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker (report bugs here)
-
-L<https://rt.cpan.org/NoAuth/Bugs.html?Dist=App-GitFind>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/App-GitFind>
-
-=item * CPAN Ratings
-
-L<https://cpanratings.perl.org/d/App-GitFind>
-
-=item * Search CPAN
-
-L<https://metacpan.org/release/App-GitFind>
-
-=back
-
-
-=head1 ACKNOWLEDGEMENTS
-
 
 =head1 LICENSE AND COPYRIGHT
 
@@ -123,7 +128,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
-
 =cut
 
-1; # End of App::GitFind
+# }}}1
+# vi: set fdm=marker fdl=0: #
