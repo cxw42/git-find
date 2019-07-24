@@ -1,7 +1,48 @@
+# Object files
+*.o
+*.os
+*.ko
+*.obj
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+*.def
+*.exp
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Temporaries
+~*
+*~
+*.swp
+core
+*.stackdump
+
+# Module::Starter ignores
 Makefile
 Makefile.old
-Build
-Build.bat
+/Build
+/Build.bat
 META.*
 MYMETA.*
 .build/
@@ -16,3 +57,14 @@ pod2htm*.tmp
 pm_to_blib
 App-GitFind-*
 App-GitFind-*.tar.gz
+*.bak
+
+# Other
+t/TEMPLATE-dot-t
+foo
+foo.*
+TODO
+TODO*
+
+# Things we generate
+built/

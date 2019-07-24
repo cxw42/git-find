@@ -1,0 +1,3 @@
+#!/usr/bin/env perl
+use App::GitFind;
+exit App::GitFind::run(\@ARGV);
