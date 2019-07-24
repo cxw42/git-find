@@ -1,0 +1,33 @@
+# Design
+
+Interesting, there is no "git find" command
+I would really expect that to exist.
+
+feature request noted!  What would the semantics be? To distinguish from plain findd, my initial thought is that git find would search in the full repo, regardless of where you are, always excluding .git. .gitignored files would be excluded by default but could be included with an option (e.g., ag's -u for Unrestricted search)
+
+Yeah, that sounds about how I would expect it to work
+Would also need the ability to search other branches
+
+hmm... we can search other branches by checking them out into a worktree fairly easily. --- OR, TIL git ls-tree https://stackoverflow.com/a/8965167/2877364 . Sounds pretty straightforward. Now, grepping in other branches would require checking out into a worktree, or digging deep into git plumbing commands.
+
+how do i find a list of files committed to a branch? - Stack Overflow
+How do I list all the files that I committed to a specific branch? I've committed about 40+ files to a branch, and I need to find the file names because I am trying to debug something, hard to do w...
+
+... git ls-tree would be faster but would require re-implementing the parts of find's expression engine related to names. I think the worktree approach is better for the general case. Then https://metacpan.org/pod/Path::Iterator::Rule can be used. Edit although I see that https://metacpan.org/pod/File::Find::Rule actually does most of find already :)
+
+Path::Iterator::Rule - Iterative, recursive file finder - metacpan.org
+Iterative, recursive file finder
+
+File::Find::Rule - Alternative interface to File::Find - metacpan.org
+Alternative interface to File::Find
+
+- see speed comparison at https://rjbs.manxome.org/rubric/entry/1981 .
+Perhaps Path::Iterator::Rule for a first, basic version,
+and File::Find::Object later.  Both are fast and break symlink loops
+automatically.  File::Find::Iterator is faster but was last released in 2008.
+
+# Fatpacking
+
+Perhaps use https://stackoverflow.com/a/241353/2877364 to collect dependencies,
+then App::FatPacker::Simple to do the packing.  No need to pack List::Util,
+for example (it's XS anyway).

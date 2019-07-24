@@ -4,7 +4,6 @@
 *.ko
 *.obj
 *.elf
-
 # Precompiled Headers
 *.gch
 *.pch
@@ -66,5 +65,7 @@ foo.*
 TODO
 TODO*
 
-# Things we generate
-built/
+# Fatpacker
+fatpack*
+/fatlib/
+

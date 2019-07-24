@@ -103,6 +103,7 @@ Christopher White, C<< <cxw at cpan.org> >>
 =head1 LICENSE AND COPYRIGHT
 
 Copyright 2019 Christopher White.
+Portions copyright 2019 D3 Engineering, LLC.
 
 This program is distributed under the MIT (X11) License:
 L<http://www.opensource.org/licenses/mit-license.php>
