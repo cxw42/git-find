@@ -12,11 +12,95 @@ git-find - Find files anywhere in a Git repository
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+    git find [CONTROLS] [REFS] [--] [EXPRESSION]
 
-Perhaps a little code snippet.
+This command searches for files satisfying the C<EXPRESSION>, a la find(1),
+anywhere in a Git repo.  Unlike find(1), the search scope is the whole repo
+(for the C<REFS> you specify) regardless of the current directory.
 
-    git find something_or_other
+For more help, run C<git find --help> or C<git find --man>.
+
+=head1 DESCRIPTION
+
+=head2 Controls
+
+These are options controlling the overall behaviour of git-find.
+
+=over
+
+=item B<-u>
+
+Unrestricted search.  Normally, git-find does not search ignored files.
+When this option is given, it does search those files.
+
+=back
+
+=head2 Operators
+
+In the L</Refs> or L</Expression>, you can specify multiple items joined by
+logical operators.  They are listed below in order of descending precedence.
+Each operator must be separated by whitespace from any adjacent parameters.
+Operators short-circuit.
+
+=over
+
+=item B<( )>, B<[ ]>
+
+Grouping.  Parentheses and brackets are interchangeable.
+
+=item B<-not>, B<--not>, B<!>, B<^>
+
+Logical negation.
+
+=item B<-a>, B<-and>, B<--and>, B<&&>
+
+Logical and.  This is the default operator between terms if no operator
+is given.
+
+=item B<-o>, B<-or>, B<--or>, B<||>
+
+Logical or
+
+=item B<,>
+
+Sequence: separates items to be evaluated separately.
+
+=back
+
+=head2 Refs
+
+By default, git-find searches the working tree that is currently checked out.
+You can specify one or more refs to search using any of the forms described
+in L<gitrevisions(7)|https://git-scm.com/docs/gitrevisions>.
+
+You can specify multiple ranges of refs separated by C<-o> (or its equivalent
+forms given in L</Operators>) or C<,>.  Comma is treated as equivalent to C<-o>
+when separating refs.
+
+=head2 Expression
+
+The expression includes one or more elements separated by L</Operators>.
+Elements can be options, tests, or operators.
+
+Elements of expressions can be specified in a form similar to find(1).
+Long elements (e.g., C<-name>) can start with a single or a double dash.
+
+Tests are of two types:
+
+=over
+
+=item Name-only tests
+
+These are tests that only require the name of the file.  They are:
+C<-name>, C<-iname>, C<-path>, C<-ipath>, C<-regex>, and C<-iregex>.
+
+=item Detailed tests
+
+All tests other than name-only tests may require
+checking out a worktree with one or more of the given refs.
+Therefore, they may be much slower than name-only tests.
+
+=back
 
 =head1 AUTHOR
 
