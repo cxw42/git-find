@@ -12,7 +12,7 @@ git-find - Find files anywhere in a Git repository
 
 =head1 SYNOPSIS
 
-    git find [CONTROLS] [REFS] [--] [EXPRESSION]
+    git find [SWITCHES] [REFS] [--] [EXPRESSION]
 
 This command searches for files satisfying the C<EXPRESSION>, a la find(1),
 anywhere in a Git repo.  Unlike find(1), the search scope is the whole repo
@@ -22,7 +22,7 @@ For more help, run C<git find --help> or C<git find --man>.
 
 =head1 DESCRIPTION
 
-=head2 Controls
+=head2 Switches
 
 These are options controlling the overall behaviour of git-find.
 
@@ -164,4 +164,4 @@ OTHER DEALINGS IN THE SOFTWARE.
 =cut
 
 # }}}1
-# vi: set fdm=marker fdl=0: #
+# vi: set fdm=marker: #

@@ -69,3 +69,5 @@ TODO*
 fatpack*
 /fatlib/
 
+# Local dependencies from cpm/carton
+/local/

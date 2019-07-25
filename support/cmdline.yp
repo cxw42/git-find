@@ -1,0 +1,162 @@
+# cmdline.yp: Parse::Yapp file for the command-line parser for App::GitFind
+# Copyright (c) 2019 D3 Engineering, LLC.  Licensed MIT.
+
+# Header
+%left COMMA
+%left OR
+%left AND
+%left NOT
+
+%{
+    use constant true => !!1;
+    use constant false => !!0;
+%}
+
+%%
+
+# Rules
+
+cmdline:    # empty
+        |   contents
+
+contents:   expr1 COMMA expr1
+
+expr1:      expr2 OR expr2
+
+expr2:      expr3 AND expr3
+        |   expr3 expr3         # No operator => AND
+
+expr3:      expr4
+        |   NOT expr4
+
+expr4:      element
+        |   LPAREN expr RPAREN
+
+element:    SWITCH
+        |   REF
+        |   option
+        |   test
+
+%%
+
+# Footer
+
+# Implements https://git-scm.com/docs/git-check-ref-format as archived at
+# https://web.archive.org/web/20190725153529/https://git-scm.com/docs/git-check-ref-format
+sub _is_valid_ref {
+    my $arg = @_ ? $_[0] : $_;
+
+    return not $arg =~ m{(?x)     # If any of these match, it's invalid
+        #1
+        (?:(?:^|/)\.)
+    |   (?:\.lock(?:/|$))
+
+        # Ignore #2 - assume --allow-onelevel
+
+        #3
+    |   (?:\.\.)
+
+        #4
+    |   (?:[\000-\037\177 ~^:])
+
+        #5 - assume NOT --refspec-pattern (for now)
+    |   (?:[\?\*\[])
+
+        #6 - assume NOT --normalize (TODO change this for ease of use?)
+    |   (?:^/|/$|//)
+
+        #7
+    |   (?:\.$)
+
+        #8
+    |   (?:@\{)
+
+        #9
+    |   (?:^@$)
+
+        #10
+    |   (?:\\)
+
+    }x;
+} #_is_valid_ref()
+
+sub _is_valid_rev {
+    my $arg = @_ ? $_[0] : $_;
+
+    return scalar $arg =~ m{(?xi)^(?:   # If any of these match, it's valid
+            # SHA1
+            [0-9a-f]{40}
+
+            # git-describe output
+        |   (?<git_describe>.*)(?:-[0-9]+)?-g[0-9a-f]{3,}
+            (?(?{ _is_valid_ref($+{git_describe}) })|(?!a)a)
+                # no match unless git_describe is a valid ref
+
+            # HEAD
+        |   [@]
+
+            # refname - at sign - braced item (date, number, branch, "push")
+        |   (?<refatbrace>[^@]+)@\{[^\}]+\}
+            (?(?{ _is_valid_ref($+{refatbrace}) })|(?!a)a)
+
+            # at sign followed by braced item
+        |   [@]\{[^\}]+\}
+
+            # ^# and ~# forms
+        |   (?<rev_before_offset>[^\^~]+)[^~]\d+
+            (?(?{ _is_valid_rev($+{rev_before_offset}) })|(?!a)a)
+
+            # ^{} forms
+        |   (?<rev_before_brace>[^\^]+)\^\{[^\}]+\}
+            (?(?{ _is_valid_rev($+{rev_before_brace}) })|(?!a)a)
+
+            # TODO RESUME HERE - https://git-scm.com/docs/gitrevisions#Documentation/gitrevisions.txt-emltrevgtlttextgtemegemHEADfixnastybugem et seq.
+
+            # TODO ^<rev> and other revision ranges
+
+            # Failing all else, assume a valid ref is also a valid rev
+        |   (?<random_ref>[^\^]+)\^\{[^\}]+\}
+            (?(?{ _is_valid_ref($+{random_ref}) })|(?!a)a)
+
+    )$}xi;
+} #_is_valid_rev()
+
+sub _next_token {
+    my $parser = shift;
+    my $lrArgv = $parser->YYData->{ARGV};
+    my $arg = @$lrArgv ? shift(@$lrArgv) : undef;
+
+    # Check for '--'
+    if($arg eq '--') {
+        $parser->YYData->{ONLY_EXPRESSIONS} = true;
+        $arg = @$lrArgv ? shift(@$lrArgv) : undef;
+    }
+
+    my $only_expressions = !!$parser->YYData->{ONLY_EXPRESSIONS};   # after -- ?
+
+    # Check for expressions.  Look for these before checking for refs so that
+    # an expression that happens to look like a ref will be considered an
+    # expression instead of a ref.
+    #   => TODO before parsing, see if we have a '--'.  If so, don't look
+    #       for expressions before the -- , and don't look for refs after
+    #       the -- .  If not, look for expressions before refs.
+
+    # Check for switches
+    unless($only_expressions) {
+        return (SWITCH => $1) if /^-([a-zA-z0-9])$/;  # non-bundled switch
+
+        # TODO un-bundle switches
+    }
+
+
+    # Check for refs
+    unless($only_expressions) {
+        return (REF => $arg) if _is_valid_rev($arg);
+
+        # Check for possible refs at the end, since many strings might be refs.
+        return (REF => $arg) if !$only_expressions && _is_valid_ref($arg);
+    }
+
+    die "I can't understand argument $arg";     # TODO any better way to handle this?
+} #tokenize()
+
