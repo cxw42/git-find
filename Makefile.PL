@@ -13,6 +13,10 @@ my $IS_TRIAL = check_trial();
 my $secure_perl_path = get_perl_filename();
 my @provides = ();
 
+my $CMDLINE_FROM = File::Spec->catfile(qw(support cmdline.yp));
+my $CMDLINE_TO = File::Spec->catfile(qw(lib App GitFind cmdline.pm));
+    # yapp-generated command-line parser
+
 # Check if this is a TRIAL version {{{1
 sub check_trial {
     TRIAL: {
@@ -61,11 +65,11 @@ sub get_perl_filename {
 {   package MY;
 
     # dist_core: make `dist` a :: target rather than a : target,
-    # and add distcheck before dist.
+    # and add distcheck and yapp before dist.
     sub dist_core {
         my $self = shift;
         my $text = $self->SUPER::dist_core(@_);
-        $text =~ s/^dist\h*:[^:]/dist:: distcheck /m;
+        $text =~ s/^dist\h*:[^:]/dist:: distcheck $CMDLINE_TO /m;
 
         return $text;
     } # MY::dist_core
@@ -79,16 +83,23 @@ sub get_perl_filename {
 
         my $make_readme_md = File::Spec->catfile(qw(support readme.pl));
         return <<EOT;
+
+# Convenience target to run yapp
+yapp: $CMDLINE_TO
+
+$CMDLINE_TO: $CMDLINE_FROM
+\tyapp -m "App::GitFind::cmdline" -o "\$@" "\$<"
+
 authortest:
 \tRELEASE_TESTING=1 prove -lvj4 xt
 
 testhere:   # Run the tests from lib rather than blib
 \tprove -lj4
 
-README.md: @{[$VERSION_FROM]} Makefile.PL $make_readme_md
+README.md: $VERSION_FROM Makefile.PL $make_readme_md
 \t"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f md
 
-README: @{[$VERSION_FROM]} Makefile.PL $make_readme_md
+README: $VERSION_FROM Makefile.PL $make_readme_md
 \t"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f text
 
 # The following command line is rather bizarre so that it can be run on
@@ -97,7 +108,7 @@ README: @{[$VERSION_FROM]} Makefile.PL $make_readme_md
 # not trigger shell interpolation.  Double-quotes only, for compatibility
 # with cmd, and no embedded double quotes (q() or qq() instead).
 
-git-find.packed.pl: @{[$VERSION_FROM]} @{[$SCRIPT]} Makefile.PL
+git-find.packed.pl: $VERSION_FROM $SCRIPT Makefile.PL $CMDLINE_TO
 \t"$secure_perl_path" -Ilib -MApp::FatPacker -MConfig -e "eval q(\$\$) . q(ENV{PERL5LIB}=join \$\$) . q(Config{path_sep}, \@INC;); App::FatPacker->new->run_script([q(pack), q($SCRIPT)])" > "\$@"
 
 all :: README.md README git-find.packed.pl
@@ -151,6 +162,7 @@ my %opts = (
     BUILD_REQUIRES => {
         'App::FatPacker' => '0.009016',
         'Getopt::Long' => '2.5',
+        'Parse::Yapp' => '0',
         'Path::Class' => '0.37',
         'Pod::Markdown' => '0',     # pod2markdown
         'Pod::Text' => '0',         # pod2text

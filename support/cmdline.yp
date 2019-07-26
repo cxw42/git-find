@@ -18,24 +18,31 @@
 
 cmdline:    # empty
         |   contents
+        ;
 
 contents:   expr1 COMMA expr1
+        ;
 
 expr1:      expr2 OR expr2
+        ;
 
 expr2:      expr3 AND expr3
         |   expr3 expr3         # No operator => AND
+        ;
 
 expr3:      expr4
         |   NOT expr4
+        ;
 
 expr4:      element
         |   LPAREN expr RPAREN
+        ;
 
 element:    SWITCH
         |   REF
         |   option
         |   test
+        ;
 
 %%
 
@@ -46,7 +53,7 @@ element:    SWITCH
 sub _is_valid_ref {
     my $arg = @_ ? $_[0] : $_;
 
-    return not $arg =~ m{(?x)     # If any of these match, it's invalid
+    return scalar $arg !~ m{(?x)     # If any of these match, it's invalid
         #1
         (?:(?:^|/)\.)
     |   (?:\.lock(?:/|$))
@@ -69,10 +76,10 @@ sub _is_valid_ref {
     |   (?:\.$)
 
         #8
-    |   (?:@\{)
+    |   (?:\@\{)
 
         #9
-    |   (?:^@$)
+    |   (?:^\@$)
 
         #10
     |   (?:\\)
@@ -81,13 +88,16 @@ sub _is_valid_ref {
 } #_is_valid_ref()
 
 sub _is_valid_rev {
+    local %+;   # Required, since we use %+ in the regex and must
+                # be re-entrant.
+
     my $arg = @_ ? $_[0] : $_;
 
     return scalar $arg =~ m{(?xi)^(?:   # If any of these match, it's valid
             # SHA1
             [0-9a-f]{40}
 
-            # git-describe output
+            # git-describe output: ref[-#]-g<sha>
         |   (?<git_describe>.*)(?:-[0-9]+)?-g[0-9a-f]{3,}
             (?(?{ _is_valid_ref($+{git_describe}) })|(?!a)a)
                 # no match unless git_describe is a valid ref
@@ -102,20 +112,39 @@ sub _is_valid_rev {
             # at sign followed by braced item
         |   [@]\{[^\}]+\}
 
-            # ^# and ~# forms
-        |   (?<rev_before_offset>[^\^~]+)[^~]\d+
+            # rev^[#] and rev~[#] forms
+        |   (?<rev_before_offset>[^~\^]+)([~\^]\d*)+
             (?(?{ _is_valid_rev($+{rev_before_offset}) })|(?!a)a)
 
-            # ^{} forms
-        |   (?<rev_before_brace>[^\^]+)\^\{[^\}]+\}
+            # rev^{} forms (empty braces OK)
+        |   (?<rev_before_brace>[^\^]+)\^\{[^\}]*\}
             (?(?{ _is_valid_rev($+{rev_before_brace}) })|(?!a)a)
 
-            # TODO RESUME HERE - https://git-scm.com/docs/gitrevisions#Documentation/gitrevisions.txt-emltrevgtlttextgtemegemHEADfixnastybugem et seq.
+            # :/text, :/!-text, :/!!text
+        |   :/(?:![!-].+|[^!].*)
 
-            # TODO ^<rev> and other revision ranges
+            # rev:path
+        |   (?<rev_before_path>[^\^]+):.+
+            (?(?{ _is_valid_rev($+{rev_before_path}) })|(?!a)a)
+
+            # :[n:]path
+        |   :(?:\d+:)?.+
+
+            # ^<rev>
+        |   \^(?<rev_after_caret>.+)
+            (?(?{ _is_valid_rev($+{rev_after_caret}) })|(?!a)a)
+
+            # .. and ... differences
+        |   (?<rev_before_dots>[^\.]+)\.{2,3}(?<rev_after_dots>.+)
+            (?(?{ _is_valid_rev($+{rev_before_dots}) &&
+                        _is_valid_rev($+{rev_after_dots}) })|(?!a)a)
+
+            # rev^[@!] and rev^-n
+        |   \^(?<rev_before_caret_range>[^\^]+)\^(?:[@!]|-\d+)
+            (?(?{ _is_valid_rev($+{rev_before_caret_range}) })|(?!a)a)
 
             # Failing all else, assume a valid ref is also a valid rev
-        |   (?<random_ref>[^\^]+)\^\{[^\}]+\}
+        |   (?<random_ref>.+)
             (?(?{ _is_valid_ref($+{random_ref}) })|(?!a)a)
 
     )$}xi;
