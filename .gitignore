@@ -1,3 +1,6 @@
+# TEMPORARY - remove at the first stable CPAN release
+/git-find.packed.pl
+
 # Object files
 *.o
 *.os

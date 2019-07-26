@@ -6,64 +6,7 @@ use List::AutoNumbered;
 use App::GitFind::cmdline;
 my $r = \&App::GitFind::cmdline::_is_valid_rev;
 
-sub bad {
-    my ($s, $name) = @_;
-    my (undef, $filename, $line) = caller;
-    $name ||= "line $line";
-    # Show errors at the correct line number
-    eval "\n#line $line $filename\n" .
-    'ok !$r->($s), $name' . "\n";
-}
-
-sub good {
-    my ($s, $name) = @_;
-    my (undef, $filename, $line) = caller;
-    $name ||= "line $line";
-
-    # Show errors at the correct line number
-    eval "\n#line $line $filename\n" .
-    'ok $r->($s), $name' . "\n";
-}
-
-# valid refs
-
-ok $r->('a' x 40);
-ok $r->('0' x 40);
-
-#1
-bad '.';
-bad 'foo/.';
-bad 'foo.lock/blah';
-bad 'foo.lock';
-
-#2 ignored
-
-#3
-bad '..';
-
-#4
-bad "\003";
-bad "\177";
-bad '~';
-bad 'foo bar';
-
-#5
-bad '?';
-bad '*';
-bad '[';
-# TODO what about ']'?
-
-#6
-bad '/foo';
-bad 'bar/';
-bad 'foo//bar';
-
-#7
-bad 'foo.';
-
-#10
-bad 'foo\\bar';
-
+# Miscellaneous OK forms
 my $gitrevisions_good = List::AutoNumbered->new(__LINE__);
 $gitrevisions_good->load('tag-1-g123ae')->
     ('tag-g123ae')
@@ -73,6 +16,10 @@ $gitrevisions_good->load('tag-1-g123ae')->
     ('@{1}')
     ('@{-1}')
     ('tag@{3 days ago}')
+    ('a' x 40)
+    ('0' x 40)
+    ('.')
+    ('foo@{bar}')
 ;
 
 # The examples from gitrevisions(7)
@@ -181,7 +128,7 @@ $gitrevisions_good->load(LSKIP 4, '--all')->
     ('--before=5 minutes ago')
 ;
 
-# Bad froms from git-revisions
+# Bad forms from git-revisions
 my $gitrevisions_bad = List::AutoNumbered->new(__LINE__);
 $gitrevisions_bad->load(':/!oops')->    #invalid char after !
     ('HEAD^, v1.5.1^0')     # Multiple revs - comma not valid here
@@ -200,14 +147,29 @@ $gitrevisions_bad->load(LSKIP 4, '--disambiguate')->
     ('--before')                # no arg
 ;
 
+# Other bad forms
+$gitrevisions_bad->load(LSKIP 3, '')->
+    (undef)
+    ("\003")
+    ("\177")
+    ('~')
+    ('foo bar')
+    ('?')   # These seem to be bad, but I'm not 100% sure
+    ('*')
+    ('[')
+    (']')
+    ('foo//bar')    # non-normalize => bad
+    ('foo\\bar')    # backslash => bad
+
+;
+
+
 foreach(@{$gitrevisions_good->arr}) {
-    good $$_[1], "line $$_[0]: -$$_[1]-";
+    ok($r->($$_[1]), "line $$_[0]: -$$_[1]-");
 }
 
 foreach(@{$gitrevisions_bad->arr}) {
-    bad $$_[1], "line $$_[0]: -$$_[1]-";
+    ok(!$r->($$_[1]), "line $$_[0]: -$$_[1]-");
 }
-
-# Revs
 
 done_testing();
