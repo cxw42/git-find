@@ -1,17 +1,11 @@
-use strict;
-use warnings;
-use Test::More;
+use lib::relative '.';
+use TestKit;
 use App::GitFind::cmdline;
-my $r = \&App::GitFind::cmdline::_is_valid_ref;
+our $r = \&App::GitFind::cmdline::_is_valid_ref;
 
-sub bad {
-    my $s = shift;
-    my (undef, $filename, $line) = caller;
-    eval <<EOT;     # Show errors at the correct line number
-#line $line $filename
-    ok !\$r->(\$s), \@_;
-EOT
-}
+BEGIN { make_assertion 'bad', 'ok !$main::r->($_[0]), $_[1]'; }
+bad '';
+die $@ if $@;    # In case of errors in bad() detected only at runtime
 
 # valid refs
 

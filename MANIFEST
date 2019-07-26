@@ -1,15 +1,18 @@
-.editorconfig
 Changes
-git-find.packed.pl
 lib/App/GitFind.pm
 Makefile.PL
 MANIFEST			This list of files
+MANIFEST.SKIP
 README
 README.md
 script/git-find
+support/cmdline.yp
 support/readme.pl
 t/00-load.t
+t/10-lexer-ref.t
+t/11-lexer-rev.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t
+t/TestKit.pm
 xt/boilerplate.t

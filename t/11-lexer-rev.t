@@ -64,9 +64,19 @@ bad 'foo.';
 #10
 bad 'foo\\bar';
 
-# The examples from gitrevisions(7)
 my $gitrevisions_good = List::AutoNumbered->new(__LINE__);
-$gitrevisions_good->load('dae86e1950b1277e545cee180551750029cfe735')->
+$gitrevisions_good->load('tag-1-g123ae')->
+    ('tag-g123ae')
+    ('@')
+    ('tag@{3 days ago}')
+    ('tag@{2}')
+    ('@{1}')
+    ('@{-1}')
+    ('tag@{3 days ago}')
+;
+
+# The examples from gitrevisions(7)
+$gitrevisions_good->load(LSKIP 3, 'dae86e1950b1277e545cee180551750029cfe735')->
     ('dae86e')
     ('v1.7.4.2-679-g3bee7fb')
     ('master')
@@ -132,11 +142,62 @@ $gitrevisions_good->load('dae86e1950b1277e545cee180551750029cfe735')->
     ('^C^!')
 ;
 
+# Forms from git-rev-parse.  Treat these as revs for our purposes,
+# since they pertain primarily to revs rather than to files.
+$gitrevisions_good->load(LSKIP 4, '--all')->
+    ('--branches')
+    ('--branches=foo')
+    ('--branches=foo?bar')
+    ('--branches=foo*')
+    ('--branches=foo[a-z]')
+    ('--tags')
+    ('--tags=foo')
+    ('--tags=foo?bar')
+    ('--tags=foo*')
+    ('--tags=foo[a-z]')
+    ('--remotes')
+    ('--remotes=foo')
+    ('--remotes=foo?bar')
+    ('--remotes=foo*')
+    ('--remotes=foo[a-z]')
+    ('--glob=foo')
+    ('--glob=foo?bar')
+    ('--glob=foo*')
+    ('--glob=foo[a-z]')
+    ('--exclude=foo')
+    ('--exclude=foo?bar')
+    ('--exclude=foo*')
+    ('--exclude=foo[a-z]')
+    ('--disambiguate=1234')
+    ('--disambiguate=cdef')
+    ('--disambiguate=029a')
+    ('--since=2001-01-01')
+    ('--after=2001-01-01')
+    ('--until=2001-01-01')
+    ('--before=2001-01-01')
+    ('--since=5 minutes ago')
+    ('--after=5 minutes ago')
+    ('--until=5 minutes ago')
+    ('--before=5 minutes ago')
+;
+
+# Bad froms from git-revisions
 my $gitrevisions_bad = List::AutoNumbered->new(__LINE__);
 $gitrevisions_bad->load(':/!oops')->    #invalid char after !
-    #('HEAD^@^2')   # This is a git semantic error - should the parser care?
     ('HEAD^, v1.5.1^0')     # Multiple revs - comma not valid here
     ('HEAD~, master~3')     # ditto
+    #('HEAD^@^2')   # This is a git semantic error - should the parser care?
+;
+
+# Bad forms from git-rev-parse
+$gitrevisions_bad->load(LSKIP 4, '--disambiguate')->
+    ('--disambiguate')          # no arg
+    ('--disambiguate=x')        # Not a hex digit
+    ('--disambiguate=12f')      # <4 hex digits
+    ('--since')                 # no arg
+    ('--until')                 # no arg
+    ('--after')                 # no arg
+    ('--before')                # no arg
 ;
 
 foreach(@{$gitrevisions_good->arr}) {
@@ -148,13 +209,5 @@ foreach(@{$gitrevisions_bad->arr}) {
 }
 
 # Revs
-good 'tag-1-g123ae';
-good 'tag-g123ae';
-good '@';
-good 'tag@{3 days ago}';
-good 'tag@{2}';
-good '@{1}';
-good '@{-1}';
-good 'tag@{3 days ago}';
 
 done_testing();

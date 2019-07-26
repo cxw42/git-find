@@ -13,9 +13,10 @@ my $IS_TRIAL = check_trial();
 my $secure_perl_path = get_perl_filename();
 my @provides = ();
 
+# yapp-generated command-line parser
 my $CMDLINE_FROM = File::Spec->catfile(qw(support cmdline.yp));
 my $CMDLINE_TO = File::Spec->catfile(qw(lib App GitFind cmdline.pm));
-    # yapp-generated command-line parser
+my $CMDLINE_DIR = File::Spec->catfile(qw(lib App GitFind));
 
 # Check if this is a TRIAL version {{{1
 sub check_trial {
@@ -88,6 +89,7 @@ sub get_perl_filename {
 yapp: $CMDLINE_TO
 
 $CMDLINE_TO: $CMDLINE_FROM
+\t-mkdir "$CMDLINE_DIR"
 \tyapp -m "App::GitFind::cmdline" -o "\$@" "\$<"
 
 authortest:
@@ -170,8 +172,9 @@ my %opts = (
     TEST_REQUIRES => {
         'Carp' => '0',
         'Exporter' => '0',
-        #'Import::Into' => '0',
-        #'rlib' => '0',
+        'Import::Into' => '0',
+        'lib::relative' => '1.000',
+        'List::AutoNumbered' => '0.000007',
         #'Scalar::Util' => '0',
         #'Test::Deep' => '0.084',        # for superhashof
         #'Test::Directory' => '0.02',    # for subdirs
@@ -201,11 +204,11 @@ my %opts = (
         #'File::Spec' => '0',
         #'File::stat' => '0',
         #'File::Which' => '1.22',    # for msys2 support
+        #'Getargs::Mixed' => '1.04', # For -undef_ok option
         'Git' => '0.40',
         #'Hash::Merge' => '0.299',
         #'Hash::Ordered' => '0.011',
         #'Import::Into' => '0',
-        #'Getargs::Mixed' => '1.04', # For -undef_ok option
 
         # 'Module::Find' => '0.12', # For bugfixes
                                     # - Use for finding plugins to load.
@@ -218,18 +221,9 @@ my %opts = (
 
         #'overload' => '0',
 
-        # 'Parse::RecDescent' => '1.967015',
-            # - Use for parsing Lua tables as inline config data?
-            #   I am thinking about using this for specifying flavors at
-            #   build time.  E.g., `--flavor debug=1,["+"]=42`.
-            # - Syntax at https://www.lua.org/pil/3.6.html .
-            # - See https://www.perlmonks.org/?node_id=462581 for operator
-            #   precedence in P::RD grammars.
-
         'Path::Class' => '0.37',
         'Pod::Usage' => '0',
         # 'Probe::Perl' => '0', # For perl interpreter file location or other info.
-                                # Alternative: Padre::Perl
 
         #'Quote::Code' => '1.01',
         #'Role::Tiny' => '1.000000',
@@ -246,7 +240,7 @@ my %opts = (
         #'Syntax::Construct' => '0.07',
         #'Type::Tiny' => '1.004004',
 
-        'vars::i' => '1.06',
+        'vars::i' => '1.10',
     },
 
     META_MERGE => {

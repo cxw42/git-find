@@ -53,7 +53,9 @@ element:    SWITCH
 sub _is_valid_ref {
     my $arg = @_ ? $_[0] : $_;
 
-    return scalar $arg !~ m{(?x)     # If any of these match, it's invalid
+    return false unless defined $arg and length($arg)>0;
+
+    return scalar $arg !~ m{(?x)        # If any of these match, it's invalid
         #1
         (?:(?:^|/)\.)
     |   (?:\.lock(?:/|$))
@@ -92,6 +94,8 @@ sub _is_valid_rev {
                 # be re-entrant.
 
     my $arg = @_ ? $_[0] : $_;
+
+    return false unless defined $arg and length($arg)>0;
 
     return scalar $arg =~ m{(?xi)^(?:   # If any of these match, it's valid
             # SHA1

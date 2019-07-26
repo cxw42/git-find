@@ -9,6 +9,7 @@ App-GitFind-.*
 TODO
 \.stackdump$
 \.mailmap$
+work-in-progress.txt
 
 # Backup files
 \.swp$
@@ -18,6 +19,17 @@ TODO
 # Things we generate
 \.o(bj)?$
 \.exe$
+cmdline.pm$
+    # Generated when you run `make`
+
+# Fatpack
+fatpack
+^fatlib\b
+^git-find.packed.pl
+    # Generated when you run `make`
+
+# Local deps
+^local\b
 
 #modified included
 # Avoid version control files.
@@ -75,4 +87,3 @@ TODO
 # Avoid MYMETA files
 ^MYMETA\.
 #!end included
-
