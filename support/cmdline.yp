@@ -1,7 +1,11 @@
 # cmdline.yp: Parse::Yapp file for the command-line parser for App::GitFind
-# Copyright (c) 2019 D3 Engineering, LLC.  Licensed MIT.
+# Copyright (c) 2019 Christopher White.
+# Copyright (c) 2019 D3 Engineering, LLC.
+# Licensed MIT.
 
+#############################################################################
 # Header
+
 %left COMMA
 %left OR
 %left AND
@@ -15,6 +19,7 @@
 
 %%
 
+#############################################################################
 # Rules
 
 cmdline:    # empty
@@ -47,6 +52,7 @@ element:    SWITCH
 
 %%
 
+#############################################################################
 # Footer
 
 # Flag a ref as invalid without using regexes.
@@ -80,115 +86,116 @@ sub _is_ref_ok {
                 || substr($arg, -1) eq '/'
                 || index($arg, '//') != -1;
 
-    #7
+    # #7.  Also prohibits ".", which is OK for git-find since it is
+    # fairly ambiguous between a ref/rev and a path.
     return false if substr($arg, -1) eq '.';
 
     #8
     return false if index($arg, '@{') != -1;
 
-    #9
-    return false if $arg eq '@';
+    #9 ('@') - ignore this one for simplicity in the rev test below.
 
     #10 - require the caller to check that
 
     return true;    # It's OK if we got here
 } #_is_ref_ok()
 
-#our @_to_check;     # list of [coderef, parameter(s)]
+#use re 'debug';
 
-use re 'debug';
-
-# Regex to match a rev that is not itself a ref.
+# Regex to match a rev or range of revs, i.e., something we should pass to git
 my $_rev_regex =
-    qr{(?xi)
-        (?:(?&Rev))
+    qr=(?xi)
+        (?&RevRange)
 
         (?(DEFINE)
 
-            (?<Rev> ^(?:    # If any of these match, it's valid
-
-                    # SHA1s, possibly abbreviated, are refs,
-                    # as are git-describe outputs.
-                    (?&Ref)
-
-                    # HEAD
-                |   \@
-
-                    # refname - at sign - braced item (date, #, branch, "push")
-                |   ((?&Ref))\@\{[^\}]+\}
-
-                    # at sign followed by braced item
-                |   \@\{[^\}]+\}
-
-                    # rev^[#] and rev~[#] forms
-                |   ((?&Rev))(?:[~\^]\d*)+
-
-                    # rev^{} forms (empty braces OK)
-                |   ((?&Rev))\^\{[^\}]*\}
-
+            (?<RevRange> ^(?:
                     # :/text, :/!-text, :/!!text
-                |   :/(?:![!-].+|[^!].*)
+                    :/                      #(?{ print "# saw colon slash\n"; })
+                    (?:
+                            ![!\-](?>.+)    #(?{print "# 4\n";})
+                        |   (?>[^!].*)      #(?{print "# 5\u";})
+                    )
 
-                    # rev:path
-                |   ((?&Rev)):.+
-
-                    # :[n:]path
-                |   :(?:\d+:)?.+
+                    # :[n:]path.  NOTE: we prohibit starting the path with
+                    # / if there is no number, in order to disambiguate
+                    # the :/ text-search cases.
+                |   :(?>\d+:)(?>.+)         #(?{print "# 2\n";})
+                |   :(?>[^/].*)             #(?{print "# 3\n";})
 
                     # ^<rev>
-                |   \^((?&Rev))
+                |   \^(?>(?&Rev))           #(?{print "# 6\n";})
 
-                    # .. and ... differences
-                |   ((?&Rev))\.{2,3}((?&Rev))
+                    # rev:path
+                |   (?>(?&Rev)):(?>.+)      #(?{print "# 7\n";})
 
-                    # rev^[@!] and rev^-n
-                |   ((?&Rev))\^(?:\@|!|-\d*)
+                    # .. and ... differences.  Also handles the fallthrough
+                    # of revrange->rev->ref.
+                |   (?&Rev)(?>\.{2,3}(?>(?&Rev)))?
+                                            #(?{print "# 8\n";})
 
-                )$) #End of <Rev>
+                    # ..rev and ...rev
+                |   (?>\.{2,3}(?>(?&Rev)))
 
-            (?<Ref>
-                ([^\000-\037\177 ~\^:\\?*\[]+)   # git-check-ref-format #4, #5
+                    # at sign followed by braced item, and possibly
+                    # preceded by a REF (not a rev).  E.g.,
+                    # HEAD@{1}@{1} doesn't work.
+                    # refname - at sign - braced item (date, #, branch, "push")
+                |   (?&Ref)?(?>\@\{[^\}]+\})
+                                            #(?{print "# 9\n";})
+
+            )$) # End of RevRange
+
+            (?<Rev> (?&Ref)(?&RefTrailer)* )
+                    # This handles most of the cases.
+                    # SHA1s, possibly abbreviated, are refs,
+                    # as are git-describe outputs, whence RefTrailer*
+                    # instead of RefTrailer+.
+
+            (?<RefTrailer>
+                    # For rev^[#] and rev~[#] forms
+                    (?>[~\^]\d*)
+
+                    # For rev^{} forms (empty braces OK)
+                |   (?>\^\{[^\}]*\})
+
+                    # For rev^[@!] and rev^-n
+                |   (?>\^(?: \@ | ! | -\d* ))
+            ) # End of RefTrailer
+
+            (?<Ref> # NOTE: do not use (?>...) around a (?&Ref).  Since
+                    # @ is ok in a ref but @{ is not, (?>) can leave the @
+                    # stuck in the Ref and prevent a match.
+                (\@ | [^\000-\037\177\ ~\^:\\?*\[]+)
+                    # git-check-ref-format #4, #5, plus '@' from git-rev-parse
                 (?(?{ _is_ref_ok($+) })|(?!))
                     # NOTE: $+ used since I couldn't get named capture groups
                     # with either %+ or %- to work
-            ) #End of <Ref>
+            ) # End of <Ref>
 
         ) #End of (DEFINE)
 
-    }xi;
+    =xi;
 
 sub _is_valid_rev {
-
-    #local @_to_check;
-
     my $arg = @_ ? $_[0] : $_;
     #print STDERR "# _is_valid_rev($arg)\n";
 
     return false unless defined $arg and length($arg)>0;
 
-#    local $+;   # Since we are re-entrant and use this in code blocks
-#                # in the regex.
-
-    #my $private_re = qr{$_rev_regex};
-    my $ok = $arg =~ m{$_rev_regex};    #m{$private_re};
-    return false unless $ok;
-
-#    # TODO figure this out
-#    # See if we have any recursive checks to do.  This is to prevent the
-#    # regex engine from being re-entered.
-#    for(@_to_check) {
-#        my ($coderef, @args) = @$_;
-#        return false unless $coderef->(@args);
-#    }
+    my $ok = $arg =~ m{$_rev_regex};
 
     #print STDERR "# Tried rev -$arg- which was @{[$ok ? 'ok' : 'not ok']}\n";
-    return true;
+    return $ok;
 } #_is_valid_rev()
 
 sub _next_token {
     my $parser = shift;
     my $lrArgv = $parser->YYData->{ARGV};
     my $arg = @$lrArgv ? shift(@$lrArgv) : undef;
+
+    # TODO? in the expression, split trailing commas into their
+    # own arguments
 
     # Check for '--'
     if($arg eq '--') {
@@ -222,5 +229,5 @@ sub _next_token {
     }
 
     die "I can't understand argument $arg";     # TODO any better way to handle this?
-} #tokenize()
+} #_next_token()
 

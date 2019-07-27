@@ -18,8 +18,11 @@ $gitrevisions_good->load('tag-1-g123ae')->
     ('tag@{3 days ago}')
     ('a' x 40)
     ('0' x 40)
-    ('.')
     ('foo@{bar}')
+    ('foo@bar')
+    ('foo@')
+    ('@bar')
+    (']')       # `git tag ']'` works!
 ;
 
 # The examples from gitrevisions(7)
@@ -62,8 +65,9 @@ $gitrevisions_good->load(LSKIP 3, 'dae86e1950b1277e545cee180551750029cfe735')->
     ('r1...r2')
     ('origin..')
     ('origin..HEAD')
+    ('origin..@')
     ('..origin')
-    ('HEAD..origin')
+    ('@..origin')
     ('r1^@')
     ('r1^!')
     ('r1^-')
@@ -149,18 +153,14 @@ $gitrevisions_bad->load(LSKIP 4, '--disambiguate')->
 
 # Other bad forms
 $gitrevisions_bad->load(LSKIP 3, '')->
-    (undef)
-    ("\003")
-    ("\177")
     ('~')
     ('foo bar')
     ('?')   # These seem to be bad, but I'm not 100% sure
     ('*')
     ('[')
-    (']')
     ('foo//bar')    # non-normalize => bad
     ('foo\\bar')    # backslash => bad
-
+    ('.')           # Prohibit because ambigious in our use case
 ;
 
 
@@ -171,5 +171,10 @@ foreach(@{$gitrevisions_good->arr}) {
 foreach(@{$gitrevisions_bad->arr}) {
     ok(!$r->($$_[1]), "line $$_[0]: -$$_[1]-");
 }
+
+# Ones to test manually to suppress odd output
+ok(!$r->(undef), "undef");
+ok(!$r->("\003"), '^C');
+ok(!$r->("\177"), '^?');
 
 done_testing();
