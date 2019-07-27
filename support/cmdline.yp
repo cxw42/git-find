@@ -97,6 +97,11 @@ sub _is_ref_ok {
 
     #10 - require the caller to check that
 
+    # Extra: Prohibit refs that start with '--' since they are arguably
+    # ambiguous with command-line options (and I can't make them work
+    # with git anyway).
+    return false if substr($arg, 0, 2) eq '--';
+
     return true;    # It's OK if we got here
 } #_is_ref_ok()
 
@@ -104,16 +109,16 @@ sub _is_ref_ok {
 
 # Regex to match a rev or range of revs, i.e., something we should pass to git
 my $_rev_regex =
-    qr=(?xi)
+    qr`(?xi)    # backtick delimiter because it doesn't occur in the regex text
         (?&RevRange)
 
         (?(DEFINE)
 
             (?<RevRange> ^(?:
                     # :/text, :/!-text, :/!!text
-                    (?>:/                   #(?{ print "# saw colon slash\n"; })
+                    (?::/                   #(?{ print "# saw colon slash\n"; })
                         (?:
-                                ![!\-](?>.+)    #(?{print "# 4\n";})
+                                ![!\-](?:.+)    #(?{print "# 4\n";})
                             |   [^!].*          #(?{print "# 5\u";})
                         )
                     )
@@ -121,22 +126,23 @@ my $_rev_regex =
                     # :[n:]path.  NOTE: we prohibit starting the path with
                     # / if there is no number, in order to disambiguate
                     # the :/ text-search cases.
-                |   (?>:\d+:)(?>.+)         #(?{print "# 2\n";})
-                |   (?>:[^/].*)             #(?{print "# 3\n";})
+                |   :\d+:(?:.+)         #(?{print "# 2\n";})
+                |   :[^/].*             #(?{print "# 3\n";})
 
                     # ^<rev>
-                |   \^(?>(?&Rev))           #(?{print "# 6\n";})
+                |   \^(?&Rev)           #(?{print "# 6\n";})
 
                     # rev:path
-                |   (?>(?&Rev)):(?>.+)      #(?{print "# 7\n";})
+                |   (?&Rev):(?:.+)      #(?{print "# 7\n";})
 
-                    # .. and ... differences.  Also handles the fallthrough
+                    # .. and ... differences, including x.., x..., x..y,
+                    # and x...y.  Also handles the fallthrough
                     # of revrange->rev->ref.
-                |   (?&Rev)(?>\.{2,3}(?&Rev))?
+                |   (?&Rev)(?:\.{2,3}(?&Rev)?)?
                                             #(?{print "# 8\n";})
 
                     # ..rev and ...rev
-                |   (?>\.{2,3}(?&Rev))
+                |   \.{2,3}(?&Rev)
 
                     # at sign followed by braced item, and possibly
                     # preceded by a REF (not a rev).  E.g.,
@@ -144,6 +150,15 @@ my $_rev_regex =
                     # refname - at sign - braced item (date, #, branch, "push")
                 |   (?&Ref)?\@\{[^\}]+\}
                                             #(?{print "# 9\n";})
+
+                    # git-rev-parse "Options for Objects" forms
+                |   --all
+                |   --(?:branches|tags|remotes)(?:=.+)?
+                |   --(?:glob|exclude)=.+
+                |   --disambiguate=[0-9a-f]{4,40}
+
+                    # git-rev-parse "Other Options" forms
+                |   --(since|after|until|before)=.+
 
             )$) # End of RevRange
 
@@ -155,13 +170,13 @@ my $_rev_regex =
 
             (?<RefTrailer>
                     # For rev^[#] and rev~[#] forms
-                    (?>[~\^]\d*)
+                    [~\^]\d*
 
                     # For rev^{} forms (empty braces OK)
-                |   (?>\^\{[^\}]*\})
+                |   \^\{[^\}]*\}
 
                     # For rev^[@!] and rev^-n
-                |   (?>\^(?: \@ | ! | -\d* ))
+                |   \^(?: \@ | ! | -\d* )
             ) # End of RefTrailer
 
             (?<Ref>
@@ -182,7 +197,7 @@ my $_rev_regex =
 
         ) #End of (DEFINE)
 
-    =xi;
+    `xi; # End of qr`...`
 
 sub _is_valid_rev {
     my $arg = @_ ? $_[0] : $_;
