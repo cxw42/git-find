@@ -9,8 +9,8 @@ script/git-find
 support/cmdline.yp
 support/readme.pl
 t/00-load.t
-t/10-lexer-ref.t
 t/11-lexer-rev.t
+t/20-parser-basic.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t

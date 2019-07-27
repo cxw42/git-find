@@ -206,7 +206,7 @@ my %opts = (
         #'File::Which' => '1.22',    # for msys2 support
         #'Getargs::Mixed' => '1.04', # For -undef_ok option
         'Git' => '0.40',
-        #'Hash::Merge' => '0.299',
+        'Hash::Merge' => '0.299',
         #'Hash::Ordered' => '0.011',
         #'Import::Into' => '0',
 

@@ -24,7 +24,8 @@ For more help, run C<git find --help> or C<git find --man>.
 
 =head2 Switches
 
-These are options controlling the overall behaviour of git-find.
+These are options controlling the overall behaviour of git-find.  They may
+not be interleaved in with the L</Expression>, if one is given.
 
 =over
 
@@ -52,12 +53,12 @@ Grouping.  Parentheses and brackets are interchangeable.
 
 Logical negation.
 
-=item B<-a>, B<-and>, B<--and>, B<&&>
+=item B<-a>, B<--a>, B<-and>, B<--and>, B<&&>
 
 Logical and.  This is the default operator between terms if no operator
 is given.
 
-=item B<-o>, B<-or>, B<--or>, B<||>
+=item B<-o>, B<--o>, B<-or>, B<--or>, B<||>
 
 Logical or
 
