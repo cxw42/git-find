@@ -111,17 +111,18 @@ my $_rev_regex =
 
             (?<RevRange> ^(?:
                     # :/text, :/!-text, :/!!text
-                    :/                      #(?{ print "# saw colon slash\n"; })
-                    (?:
-                            ![!\-](?>.+)    #(?{print "# 4\n";})
-                        |   (?>[^!].*)      #(?{print "# 5\u";})
+                    (?>:/                   #(?{ print "# saw colon slash\n"; })
+                        (?:
+                                ![!\-](?>.+)    #(?{print "# 4\n";})
+                            |   [^!].*          #(?{print "# 5\u";})
+                        )
                     )
 
                     # :[n:]path.  NOTE: we prohibit starting the path with
                     # / if there is no number, in order to disambiguate
                     # the :/ text-search cases.
-                |   :(?>\d+:)(?>.+)         #(?{print "# 2\n";})
-                |   :(?>[^/].*)             #(?{print "# 3\n";})
+                |   (?>:\d+:)(?>.+)         #(?{print "# 2\n";})
+                |   (?>:[^/].*)             #(?{print "# 3\n";})
 
                     # ^<rev>
                 |   \^(?>(?&Rev))           #(?{print "# 6\n";})
@@ -131,17 +132,17 @@ my $_rev_regex =
 
                     # .. and ... differences.  Also handles the fallthrough
                     # of revrange->rev->ref.
-                |   (?&Rev)(?>\.{2,3}(?>(?&Rev)))?
+                |   (?&Rev)(?>\.{2,3}(?&Rev))?
                                             #(?{print "# 8\n";})
 
                     # ..rev and ...rev
-                |   (?>\.{2,3}(?>(?&Rev)))
+                |   (?>\.{2,3}(?&Rev))
 
                     # at sign followed by braced item, and possibly
                     # preceded by a REF (not a rev).  E.g.,
                     # HEAD@{1}@{1} doesn't work.
                     # refname - at sign - braced item (date, #, branch, "push")
-                |   (?&Ref)?(?>\@\{[^\}]+\})
+                |   (?&Ref)?\@\{[^\}]+\}
                                             #(?{print "# 9\n";})
 
             )$) # End of RevRange
@@ -163,11 +164,17 @@ my $_rev_regex =
                 |   (?>\^(?: \@ | ! | -\d* ))
             ) # End of RefTrailer
 
-            (?<Ref> # NOTE: do not use (?>...) around a (?&Ref).  Since
-                    # @ is ok in a ref but @{ is not, (?>) can leave the @
-                    # stuck in the Ref and prevent a match.
-                (\@ | [^\000-\037\177\ ~\^:\\?*\[]+)
-                    # git-check-ref-format #4, #5, plus '@' from git-rev-parse
+            (?<Ref>
+                (   \@      # '@' from git-rev-parse
+                |   (?:[^\000-\037\177\ ~\^:\\?*\[.@/]
+                            # git-check-ref-format #4, #5.
+                            # [.@/] are handled below
+                    | \.(?!\.)  # . ok, but .. prohibited
+                    | \@(?!\{)  # @ ok, but @{ prohibited
+                    | /(?!/)    # / ok, but // prohibited
+
+                    )+?
+                )
                 (?(?{ _is_ref_ok($+) })|(?!))
                     # NOTE: $+ used since I couldn't get named capture groups
                     # with either %+ or %- to work
