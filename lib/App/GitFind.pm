@@ -4,12 +4,14 @@ use 5.010;
 use strict;
 use warnings;
 
-use Getopt::Long 2.34 qw(GetOptionsFromArray :config),
-    qw(auto_help auto_version),     # handle -?, --help, --version
-    qw(passthrough require_order),  # stop at the first unrecognized.  TODO
-    qw(no_getopt_compat gnu_compat bundling);   # --foo, -x, no +x
+use App::GitFind::cmdline;
+use Getopt::Long 2.34 ();
+#    qw(GetOptionsFromArray :config),
+#    qw(auto_help auto_version),     # handle -?, --help, --version
+#    qw(passthrough require_order),  # stop at the first unrecognized.  TODO
+#    qw(no_getopt_compat gnu_compat bundling);   # --foo, -x, no +x
 
-use Git;
+use Git;    # TODO Git::Raw?
 
 our $VERSION = '0.000001';
 
@@ -59,7 +61,7 @@ sub run {
     my $repo = Git->repository('.');
     use Data::Dumper;
     say "Repo: ", Dumper $repo;
-} #new()
+} #run()
 
 =head1 INTERNALS
 
@@ -72,23 +74,22 @@ stored under key C<_>.
 
 sub _process_options {
     my $lrArgv = shift // [];
-    my %opts;
+    my $hrOpts;
 
-    # uncoverable branch true
-    GetOptionsFromArray($lrArgv, \%opts, qw(h man v))
-        or die 'Error while processing global options';
-        # At present, this always succeeds, because it is configured to simply
-        # stop at the first unrecognized option, and because none of the
-        # options have coderefs or validation.
-    $opts{_} = $lrArgv if @$lrArgv;
+    $hrOpts = App::GitFind::cmdline::Parse($lrArgv)
+        or die 'Could not parse options successfully';
 
-    Getopt::Long::HelpMessage(-exitval => 0, -verbose => 2) if $opts{man};
-    Getopt::Long::HelpMessage(-exitval => 0) if $opts{h};
-    Getopt::Long::VersionMessage(-exitval => 0) if $opts{v};
+    #DEBUG
+    say Dumper \$hrOpts;
+    exit(0);
+
+    #Getopt::Long::HelpMessage(-exitval => 0, -verbose => 2) if $opts{man};
+    #Getopt::Long::HelpMessage(-exitval => 0) if $opts{h};
+    #Getopt::Long::VersionMessage(-exitval => 0) if $opts{v};
 
     #Getopt::Long::HelpMessage(-exitval => 2) unless @$lrArgv;
 
-    return \%opts;
+    #return \%opts;
 } #_process_options
 
 1; # End of App::GitFind

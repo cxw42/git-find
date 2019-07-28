@@ -38,12 +38,13 @@
     use constant true => !!1;
     use constant false => !!0;
 
+    # Merge any number of hashrefs together and return a hashref
     sub merge {
         state $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');
         $merger->set_clone_behavior(false);     # No cloning
         my $retval = {};
         for(@_) {
-            next unless defined;
+            next unless ref eq 'HASH';
             $retval = $merger->merge($retval, $_);
         }
         return $retval;
@@ -64,10 +65,10 @@ cmdline:    # empty             { +{} }
 
 # Switches
 
-switches_and_revs:   SWITCH     { +{ switches => [$_[1]] } }
+switches_and_revs:   SWITCH     { +{ switches => {$_[1]=>true} } }
         |   REV                 { +{ revs => [$_[1]] } }
         |   switches_and_revs SWITCH
-                                { merge($_[1], +{ switches => [$_[2]] }) }
+                                { merge($_[1], +{ switches => {$_[2]=>true} }) }
         |   switches_and_revs REV
                                 { merge($_[1], +{ revs => [$_[2]] }) }
         ;
@@ -302,7 +303,12 @@ sub _get_expression_element {
     # -newerXY reference
     # -path pattern
     # -perm [-/+]?mode
+    # -ref revspec          # not in find(1) - specify a git ref OR REV
+                            # (identical to -rev so you don't have to
+                            #  remember which)
     # -regex pattern
+    # -rev revspec          # not in find(1) - specify a git rev OR REF
+                            # (identical to -ref)
     # -samefile name
     # -size n
     # -type c
@@ -362,6 +368,9 @@ $DB::single=1;
                     # non-bundled switch
             # TODO un-bundle switches; handle switches with args
 
+            # Long switches
+            return (SWITCH => $1) if $arg =~ /^--?(help|version|man)$/;
+
             return (REV => $arg) if _is_valid_rev($arg);
 
             die "I don't understand argument $arg before --";
@@ -375,8 +384,10 @@ $DB::single=1;
     } else {
         # Merged-arg mode: any arg could be anything
 
+        # TODO update per the above
         return (SWITCH => $1) if $arg =~ /^-([a-zA-z0-9])$/;
-                # TODO update per the above
+        # Long switches
+        return (SWITCH => $1) if $arg =~ /^--?(help|version|man)$/;
 
         # Check for expressions.  Look for these before checking for refs so
         # that an expression that happens to look like a ref will be considered
