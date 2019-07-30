@@ -155,31 +155,33 @@ element:    TEST
 # Definitions of supported command-line arguments {{{1
 
 # Helpers for defining these
-sub _a { ($_[0] => {}) }
-sub _an { ($_[0] => { nparam => ($_[1]||0) }) }
+sub _a { ($_[0] => { token => 'ACTION', nparam => ($_[1]||0) }) }
+sub _t { ($_[0] => { token => 'TEST', nparam => ($_[1]||0) }) }
 
 # A map from argument name to a details hashref.  Valid keys in the hashref are:
+#   token:  The token type
 #   nparam: - if a regex, the argument ends with an @ARGV element matching
 #             that regex.
-#           - if an integer, the argument takes that many parameters.
-my %args=(
+#           - if an integer, the argument takes that many parameters (>=0).
+
+my %ARGS=(
     # TODO find(1) positional options, global options?
 
     # No-argument tests
-    map( { _a $_ }
+    map( { _t $_ }
         qw(empty executable false nogroup nouser readable true writeable) ),
 
     # No-argument actions
     map( { _a $_ } qw(delete ls print print0 prune quit) ),
 
     # One-argument tests
-    map( { _an $_, 1 } qw(amin anewer atime cmin cnewer ctime fstype gid
+    map( { _t $_, 1 } qw(amin anewer atime cmin cnewer ctime fstype gid
         group ilname iname inum ipath iregex iwholename links lname mmin
         mtime name newer path perm ref regex rev samefile size type uid
         used user wholename xtype context) ),
 
     # -newerXY forms
-    map( { _an('newer' . join('', @$_), 1) }
+    map( { _t('newer' . join('', @$_), 1) }
         cartesian {1} [qw(a B c m)], [qw(a B c m t)] ),
 
     # -amin n
@@ -223,8 +225,8 @@ my %args=(
     # -context pattern
 
     # Actions with a fixed number of arguments
-    map( { _an $_, 1 } qw(fls fprint fprint0 printf) ),
-    map( { _an $_, 2 } qw(fprintf) ),
+    map( { _a $_, 1 } qw(fls fprint fprint0 printf) ),
+    map( { _a $_, 2 } qw(fprintf) ),
 
     # -fls file
     # -fprint file
@@ -237,9 +239,15 @@ my %args=(
     # -execdir command [;+]
     # -ok command ;
     # -okdir command ;
-    map( { _an $_, qr/^[;+]$/ } qw(exec execdir) ),
-    map( { _an $_, qr/^;$/ } qw(ok okdir) ),
+    map( { _a $_, qr/^[;+]$/ } qw(exec execdir) ),
+    map( { _a $_, qr/^;$/ } qw(ok okdir) ),
 );
+
+my $ARGTEST;
+{   # Make a regex that will match any arg, with - or --.
+    my $x = join '|', map { quotemeta } keys %ARGS;
+    $ARGTEST = qr{^--?($x)$};
+}
 
 # }}}1
 # Helpers for the tokenizer {{{1
@@ -394,76 +402,125 @@ sub _is_valid_rev {
     return scalar($arg =~ m{$_rev_regex});
 } #_is_valid_rev()
 
-# Helper to check for expression elements
-sub _get_expression_element {
-    croak "_get_expression_element: need list context" unless wantarray;
-    my $arg = shift or croak '_get_expression_element: Need an arg';
+# Get an expression element from the array passed in $_[0].
+sub _consume_expression_element {
+    my $lrArgv = shift;
+    my @retval;
 
+    #say STDERR "# Trying >>$lrArgv->[0]<<";
     # TODO find(1) positional options, global options?
 
-    # No-argument tests
-    return (TEST => $1) if $arg =~ m{(?x)^--?(
-        empty|executable|false|nogroup|nouser|readable|true|writeable)$};
+    # Regular options
+    if($lrArgv->[0] =~ $ARGTEST) {
+        #say STDERR "#   - matched";
+        my $arg = $1;
+        my %opts = %{$ARGS{$arg}};
 
-    # No-argument actions
-    return (ACTION => $1) if $arg =~ m{(?x)^--?(
-        delete|ls|print|print0|prune|quit)$};
+        # No-argument tests or actions
+        unless($opts{nparam}>0) {
+            #say STDERR "#   - No parameters";
+            shift @$lrArgv;
+            return ($opts{token} => $arg)
+        }
 
-    # TODO Return one-element list to request another arg.
+        # Consume additional arguments
+        #say STDERR "#   - $opts{nparam} parameters";
+        die "Not enough parameters after --$arg (need $opts{nparam})"
+            unless @$lrArgv >= ($opts{nparam}+1);   # +1 for $arg itself
 
-    # TODO things with args
+        @retval = ($opts{token} => {
+                        name => $arg,
+                        params => [ @{$lrArgv}[1..$opts{nparam}] ]
+                    });
+        splice @$lrArgv, 0, $opts{nparam}+1;
+        return @retval;
+    }
 
     # Operators
-    return (COMMA => ',') if $arg eq ',';
-    return (OR => '-o') if $arg =~ /^(?:-o|--o|-or|--or|\|\|)$/;
-    return (AND => '-a') if $arg =~ /^(?:-a|--a|-and|--and|&&)$/;
-    return (NOT => '!') if $arg =~ /^(?:-not|--not|!|\^)$/;
-    return (LPAREN => '(') if $arg =~ /^[([]$/;
-    return (RPAREN => ')') if $arg =~ /^[])]$/;
+    my $arg = $lrArgv->[0];
+
+    @retval = (COMMA => ',') if $arg eq ',';
+    @retval = (OR => '-o') if $arg =~ /^(?:-o|--o|-or|--or|\|\|)$/;
+    @retval = (AND => '-a') if $arg =~ /^(?:-a|--a|-and|--and|&&)$/;
+    @retval = (NOT => '!') if $arg =~ /^(?:-not|--not|!|\^)$/;
+    @retval = (LPAREN => '(') if $arg =~ /^[([]$/;
+    @retval = (RPAREN => ')') if $arg =~ /^[])]$/;
+
+    if(@retval) {
+        shift @$lrArgv;
+        return @retval;
+    }
 
     return ();  # Not an expression element
-} #_get_expression_element
+} #_consume_expression_element
+
+# Get a switch from the array passed in $_[0], if any.
+# Removes the switch from the array if successful.
+# Returns the token on success, and () on failure.
+# TODO un-bundle switches; handle switches with args.
+sub _consume_switch {
+    my $lrArgv = shift;
+    if($lrArgv->[0] =~ /^-([a-zA-z0-9])$/) {    # non-bundled switch
+        shift @$lrArgv;
+        return (SWITCH => $1)
+    } elsif($lrArgv->[0] =~ /^--?(help|version|man)$/) {    # long switch
+        shift @$lrArgv;
+        return (SWITCH => $1);
+    }
+
+    return ();
+} #_consume_switch()
+
+# Consume a rev from the array in $_[0]
+sub _consume_rev {
+    my $lrArgv = shift;
+    my $arg = $lrArgv->[0];
+    if(_is_valid_rev($arg)) {
+        shift @$lrArgv;
+        return (REV => $arg);
+    }
+
+    return ();
+} #_consume_rev()
 
 # }}}1
-# Functions that Parse::Yapp requires us to provide {{{1
+# Tokenizer and error-reporting routine for Parse::Yapp {{{1
 
 # The lexer
 sub _next_token {
     my $parser = shift;
     my $lrArgv = $parser->YYData->{ARGV};
     return ('', undef) unless @$lrArgv;     # EOF
-    my $arg = shift(@$lrArgv);
+    my @retval;     # The eventual token we will return
 
     # TODO? in the expression, split trailing commas into their
     # own arguments
 
     # Check for '--'
-    if($arg eq '--') {
+    if($lrArgv->[0] eq '--') {
         $parser->YYData->{ONLY_EXPRESSIONS} = true;
-        return ('', undef) unless @$lrArgv;
+        return ('', undef) unless @$lrArgv > 1;
             # We are about to shift, so return EOF if this was the last arg.
-        $arg = shift(@$lrArgv);
+        shift(@$lrArgv);
     }
 
     if($parser->YYData->{HAS_DASH_DASH}) {
-        # Split-arg mode: don't look for expressions before '--' or refs after.
+        # Split-arg mode: don't look for expressions before '--', or
+        # for switches or refs after '--'.
         if(!$parser->YYData->{ONLY_EXPRESSIONS}) {  # Look for switches/refs
 
-            return (SWITCH => $1) if $arg =~ /^-([a-zA-z0-9])$/;
-                    # non-bundled switch
-            # TODO un-bundle switches; handle switches with args
+            @retval = _consume_switch($lrArgv);
+            return @retval if @retval;
 
-            # Long switches
-            return (SWITCH => $1) if $arg =~ /^--?(help|version|man)$/;
+            @retval = _consume_rev($lrArgv);
+            return @retval if @retval;
 
-            return (REV => $arg) if _is_valid_rev($arg);
-
-            die "I don't understand argument '$arg' before --";
+            die "I don't understand argument '$lrArgv->[0]' before --";
 
         } else {                                    # Look for expressions
-            my @expr = _get_expression_element($arg);
-            return @expr if @expr;
-            die "I don't understand argument '$arg' after --";
+            @retval = _consume_expression_element($lrArgv);
+            return @retval if @retval;
+            die "I don't understand argument '$lrArgv->[0]' after --";
         }
 
     } else {
@@ -472,23 +529,22 @@ sub _next_token {
         # Check for expressions.  Look for these before checking for refs so
         # that an expression that happens to look like a ref will be considered
         # an expression instead of a ref.
-        my @expr = _get_expression_element($arg);
-        return @expr if @expr==2;   # We found a standalone element
+        my @retval = _consume_expression_element($lrArgv);
+        return @retval if @retval;
 
         # Next, look for switches.  These are after expression elements
         # so that -a and -o will not be parsed as switches.
-        # TODO update per the above
-        return (SWITCH => $1) if $arg =~ /^-([a-zA-z0-9])$/;
-        # Long switches
-        return (SWITCH => $1) if $arg =~ /^--?(help|version|man)$/;
+        @retval = _consume_switch($lrArgv);
+        return @retval if @retval;
 
         # Last of all, revs.
-        return (REV => $arg) if _is_valid_rev($arg);
+        @retval = _consume_rev($lrArgv);
+        return @retval if @retval;
 
-        die "I don't understand argument $arg";
+        die "I don't understand argument $lrArgv->[0]";
     }
 
-    die "Unexpected error while processing argument $arg";   # Shouldn't happen
+    die "Unexpected error while processing argument $lrArgv->[0]";   # Shouldn't happen
 } #_next_token()
 
 # Report an error

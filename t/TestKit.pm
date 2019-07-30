@@ -30,7 +30,8 @@ sub import {
 
     feature->import::into($target, ':5.10');
     Carp->import::into($target, qw(carp croak confess cluck));
-    $_->import::into($target) foreach qw(strict warnings Test::More);
+    $_->import::into($target) foreach qw(strict warnings
+        List::AutoNumbered Test::More);
 }
 
 # === Helpers for use in test files ===

@@ -17,6 +17,15 @@ $ok->load([qw(-u)])->   # switch
     ([qw(-u master -empty)])            # switch + ref + test
     ([qw(-u master -print)])            # switch + ref + action
     ([qw(-u master -empty -print)])     # switch + ref + test + action
+    # Then the same, but with --
+    (LSKIP 1, [qw(-u --)])   # switch
+    ([qw(master --)])      # ref
+    ([qw(-- -empty)])      # test
+    ([qw(-- -print)])      # action
+    ([qw(-u master --)])   # switch + ref
+    ([qw(-u master -- -empty)])            # switch + ref + test
+    ([qw(-u master -- -print)])            # switch + ref + action
+    ([qw(-u master -- -empty -print)])     # switch + ref + test + action
 ;
 
 foreach(@{$ok->arr}) {
