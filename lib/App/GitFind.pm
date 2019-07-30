@@ -11,7 +11,7 @@ use Getopt::Long 2.34 ();
 #    qw(passthrough require_order),  # stop at the first unrecognized.  TODO
 #    qw(no_getopt_compat gnu_compat bundling);   # --foo, -x, no +x
 
-use Git;    # TODO Git::Raw?
+use Git::Raw;
 
 our $VERSION = '0.000001';
 
@@ -58,7 +58,7 @@ Does the work.
 =cut
 
 sub run {
-    my $repo = Git->repository('.');
+    my $repo = Git::Raw::Repository->open('.');
     use Data::Dumper;
     say "Repo: ", Dumper $repo;
 } #run()

@@ -26,29 +26,55 @@
 %left NOT
 
 %{
-    #use Data::Dumper;   # DEBUG
+#use Data::Dumper;   # DEBUG
 
-    use strict;
-    use warnings;
-    use 5.010;
+use strict;
+use warnings;
+use 5.010;
 
-    use Carp qw(croak);
-    use Hash::Merge;
+use Carp qw(croak);
+use Hash::Merge;
 
-    use constant true => !!1;
-    use constant false => !!0;
+use constant true => !!1;
+use constant false => !!0;
 
-    # Merge any number of hashrefs together and return a hashref
-    sub merge {
-        state $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');
-        $merger->set_clone_behavior(false);     # No cloning
-        my $retval = {};
-        for(@_) {
-            next unless ref eq 'HASH';
-            $retval = $merger->merge($retval, $_);
-        }
-        return $retval;
+# Documentation {{{1
+
+=head1 NAME
+
+App::GitFind::cmdline - Command-line parser for git-find
+
+=head1 SYNOPSIS
+
+Generate the .pm file:
+
+    yapp -m App::GitFind::cmdline -o lib/App/GitFind/cmdline.pm support/cmdline.yp
+
+And then:
+
+    use App::GitFind::cmdline;
+    App::GitFind::cmdline::Parse(\@ARGV);
+
+=head1 FUNCTIONS
+
+=cut
+
+# }}}1
+# Helpers for the parser {{{1
+
+# Merge any number of hashrefs together and return a hashref
+sub _merge {
+    state $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');
+    $merger->set_clone_behavior(false);     # No cloning
+    my $retval = {};
+    for(@_) {
+        next unless ref eq 'HASH';
+        $retval = $merger->merge($retval, $_);
     }
+    return $retval;
+}
+
+# }}}1
 
 %}
 
@@ -59,8 +85,8 @@
 
 cmdline:    # empty             { +{} }
         |   expr                { +{ expr => $_[1] } }
-        |   switches_and_revs maybeexpr maybeswitches_and_revs
-                                { merge($_[1], +{expr => $_[2]}, $_[3]) }
+        |   switches_and_revs maybeexprplus
+                                { _merge($_[1], +{expr => $_[2]}, $_[3]) }
         ;
 
 # Switches
@@ -68,20 +94,16 @@ cmdline:    # empty             { +{} }
 switches_and_revs:   SWITCH     { +{ switches => {$_[1]=>true} } }
         |   REV                 { +{ revs => [$_[1]] } }
         |   switches_and_revs SWITCH
-                                { merge($_[1], +{ switches => {$_[2]=>true} }) }
+                                { _merge($_[1], +{ switches => {$_[2]=>true} }) }
         |   switches_and_revs REV
-                                { merge($_[1], +{ revs => [$_[2]] }) }
-        ;
-
-maybeswitches_and_revs:
-            # empty
-        |   switches_and_revs
+                                { _merge($_[1], +{ revs => [$_[2]] }) }
         ;
 
 # Expressions
 
-maybeexpr:  # empty
+maybeexprplus:  # empty
         | expr
+        | expr switches_and_revs
         ;
 
 expr:       element
@@ -104,6 +126,78 @@ element:    TEST
 
 #############################################################################
 # Footer
+
+# Definitions of supported command-line arguments {{{1
+
+# Helpers for defining these
+sub _a ($) { ($_[0] => {}) }
+sub _an ($$) { ($_[0] => { nargs => ($_[1]||0) }) }
+
+my %args=(
+    # TODO find(1) positional options, global options?
+
+    # No-argument tests
+    map( { _a $_ }
+        qw(empty executable false nogroup nouser readable true writeable) ),
+
+    # No-argument actions
+    map( { _a $_ } qw(delete ls print print0 prune quit) ),
+
+    # Tests with arguments.
+    # -amin n
+    # -anewer file
+    # -atime n
+    # -cmin n
+    # -cnewer file
+    # -ctime n
+    # -fstype type
+    # -gid n
+    # -group gname
+    # -ilname pattern
+    # -iname pattern
+    # -inum n
+    # -ipath pattern
+    # -iregex pattern
+    # -iwholename pattern
+    # -links n
+    # -lname pattern
+    # -mmin n
+    # -mtime n
+    # -name pattern
+    # -newer file
+    # -newerXY reference
+    # -path pattern
+    # -perm [-/+]?mode
+    # -ref revspec          # not in find(1) - specify a git ref OR REV
+                            # (identical to -rev so you don't have to
+                            #  remember which)
+    # -regex pattern
+    # -rev revspec          # not in find(1) - specify a git rev OR REF
+                            # (identical to -ref)
+    # -samefile name
+    # -size n
+    # -type c
+    # -uid n
+    # -used n
+    # -user uname
+    # -wholename pattern
+    # -xtype c
+    # -context pattern
+
+    # Actions with arguments
+    # -exec command [;+]
+    # -execdir command [;+]
+    # -fls file
+    # -fprint file
+    # -fprint0 file
+    # -fprintf file format
+    # -ok command ;
+    # -okdir command ;
+    # -printf format
+);
+
+# }}}1
+# Helpers for the tokenizer {{{1
 
 # Flag a ref as invalid without using regexes.
 # Implements https://git-scm.com/docs/git-check-ref-format as archived at
@@ -276,59 +370,9 @@ sub _get_expression_element {
     return (ACTION => $1) if $arg =~ m{(?x)^--?(
         delete|ls|print|print0|prune|quit)$};
 
-    # Tests with arguments.  TODO Return one-element list to request
-    # another arg.
+    # TODO Return one-element list to request another arg.
 
-    # -amin n
-    # -anewer file
-    # -atime n
-    # -cmin n
-    # -cnewer file
-    # -ctime n
-    # -fstype type
-    # -gid n
-    # -group gname
-    # -ilname pattern
-    # -iname pattern
-    # -inum n
-    # -ipath pattern
-    # -iregex pattern
-    # -iwholename pattern
-    # -links n
-    # -lname pattern
-    # -mmin n
-    # -mtime n
-    # -name pattern
-    # -newer file
-    # -newerXY reference
-    # -path pattern
-    # -perm [-/+]?mode
-    # -ref revspec          # not in find(1) - specify a git ref OR REV
-                            # (identical to -rev so you don't have to
-                            #  remember which)
-    # -regex pattern
-    # -rev revspec          # not in find(1) - specify a git rev OR REF
-                            # (identical to -ref)
-    # -samefile name
-    # -size n
-    # -type c
-    # -uid n
-    # -used n
-    # -user uname
-    # -wholename pattern
-    # -xtype c
-    # -context pattern
-
-    # Actions with arguments
-    # -exec command [;+]
-    # -execdir command [;+]
-    # -fls file
-    # -fprint file
-    # -fprint0 file
-    # -fprintf file format
-    # -ok command ;
-    # -okdir command ;
-    # -printf format
+    # TODO things with args
 
     # Operators
     return (COMMA => ',') if $arg eq ',';
@@ -341,9 +385,11 @@ sub _get_expression_element {
     return ();  # Not an expression element
 } #_get_expression_element
 
+# }}}1
+# Functions that Parse::Yapp requires us to provide {{{1
+
 # The lexer
 sub _next_token {
-$DB::single=1;
     my $parser = shift;
     my $lrArgv = $parser->YYData->{ARGV};
     return ('', undef) unless @$lrArgv;     # EOF
@@ -415,11 +461,14 @@ sub _report_error {
     print "Syntax error.\n";
 } #_report_error()
 
+# }}}1
+# Top-level parse function {{{1
+
 =head2 Parse
 
 Parse arguments.  Usage:
 
-    my $hrArgs = App::GitFind::Parse(\@ARGV);
+    my $hrArgs = App::GitFind::cmdline::Parse(\@ARGV);
 
 =cut
 
@@ -440,3 +489,19 @@ sub Parse {
 
 } #Parse()
 
+# }}}1
+# Rest of the docs {{{1
+
+=head1 AUTHOR
+
+Christopher White C<< <cxw@cpan.org> >>
+
+=head1 COPYRIGHT
+
+MIT
+
+=cut
+
+# }}}1
+
+# vi: set fdm=marker: #
