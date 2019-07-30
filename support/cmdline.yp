@@ -6,26 +6,10 @@
 #############################################################################
 # Header
 
-%token SWITCH       # flags controlling the operation of git-find
-%token REV          # a git ref or rev
-
-# elements of expressions
-%token COMMA
-%token OR
-%token AND
-%token NOT
-%token LPAREN
-%token RPAREN
-
-%token TEST
-%token ACTION
-
-%left COMMA
-%left OR
-%left AND
-%left NOT
-
 %{
+
+# Imports {{{1
+
 use Data::Dumper;   # DEBUG
 
 use strict;
@@ -34,10 +18,12 @@ use 5.010;
 
 use Carp qw(croak);
 use Hash::Merge;
+use Math::Cartesian::Product;
 
 use constant true => !!1;
 use constant false => !!0;
 
+# }}}1
 # Documentation {{{1
 
 =head1 NAME
@@ -78,6 +64,28 @@ sub _merge {
 
 %}
 
+#############################################################################
+# Token and precedence definitions
+
+%token SWITCH       # flags controlling the operation of git-find
+%token REV          # a git ref or rev
+
+# elements of expressions
+%token COMMA
+%token OR
+%token AND
+%token NOT
+%token LPAREN
+%token RPAREN
+
+%token TEST
+%token ACTION
+
+%left COMMA
+%left OR
+%left AND
+%left NOT
+
 %%
 
 #############################################################################
@@ -99,7 +107,7 @@ switches_and_revs:   SWITCH     { +{ switches => {$_[1]=>true} } }
                                 { _merge($_[1], +{ revs => [$_[2]] }) }
         ;
 
-# Expressions
+# Expressions.  Since "and", "or", and "not" are keywords in Perl, the
 
 maybeexprplus:
                                     { +{} }     # empty
@@ -108,23 +116,35 @@ maybeexprplus:
                                     # %$_[2]: inline the switches and revs
         ;
 
-# TODO: collapse consecutive elements of the same type into flat lists.
+# TODO once the parser is solid and the tests are written:
+# collapse consecutive elements of the same type into flat lists.
 expr:       element
         |   expr COMMA expr         { +{ seq => [@_[1,3]] } }
-        |   expr OR expr            { +{ disjunction => [@_[1,3]] } }
-            # TODO figure this out: implicit-AND is right-associative
-            # even though explicit-AND is left-associative (as desired).
-        |   expr expr %prec AND     { +{ conjunction => [@_[1,2]] } }
-        |   expr AND expr           { +{ conjunction => [@_[1,3]] } }
-        |   NOT expr4               { +{ negation => $_[2] } }
+        |   expr OR expr            { +{ OR => [@_[1,3]] } }
+                                    # "OR" because "or" is a Perl keyword
+
+            # subsequent_expr is used so the parser will know when to reduce.
+            # The rule "expr expr %prec AND" was right-associative
+            # even though explicit-AND was left-associative because
+            # the parser did not start reducing until after anything that
+            # could be an expr.  A subsequent_expr cannot start with
+            # a plain expr, so the parser has a reason to reduce the expr.
+        |   expr subsequent_expr %prec AND
+                                    { +{ AND => [@_[1,2]] } }
+        |   expr AND expr           { +{ AND => [@_[1,3]] } }
+        |   NOT expr4               { +{ NOT => $_[2] } }
         |   LPAREN expr RPAREN      { $_[2] }
         ;
 
+subsequent_expr:    # Everything higher-precedence than AND
+            element
+        |   NOT expr4               { +{ NOT => $_[2] } }
+        |   LPAREN expr RPAREN      { $_[2] }
+        ;
+
+
 element:    TEST
         |   ACTION
-#        |   REV
-#        |   option
-#        |   test
         ;
 
 %%
@@ -135,9 +155,13 @@ element:    TEST
 # Definitions of supported command-line arguments {{{1
 
 # Helpers for defining these
-sub _a ($) { ($_[0] => {}) }
-sub _an ($$) { ($_[0] => { nargs => ($_[1]||0) }) }
+sub _a { ($_[0] => {}) }
+sub _an { ($_[0] => { nparam => ($_[1]||0) }) }
 
+# A map from argument name to a details hashref.  Valid keys in the hashref are:
+#   nparam: - if a regex, the argument ends with an @ARGV element matching
+#             that regex.
+#           - if an integer, the argument takes that many parameters.
 my %args=(
     # TODO find(1) positional options, global options?
 
@@ -148,7 +172,16 @@ my %args=(
     # No-argument actions
     map( { _a $_ } qw(delete ls print print0 prune quit) ),
 
-    # Tests with arguments.
+    # One-argument tests
+    map( { _an $_, 1 } qw(amin anewer atime cmin cnewer ctime fstype gid
+        group ilname iname inum ipath iregex iwholename links lname mmin
+        mtime name newer path perm ref regex rev samefile size type uid
+        used user wholename xtype context) ),
+
+    # -newerXY forms
+    map( { _an('newer' . join('', @$_), 1) }
+        cartesian {1} [qw(a B c m)], [qw(a B c m t)] ),
+
     # -amin n
     # -anewer file
     # -atime n
@@ -189,16 +222,23 @@ my %args=(
     # -xtype c
     # -context pattern
 
-    # Actions with arguments
-    # -exec command [;+]
-    # -execdir command [;+]
+    # Actions with a fixed number of arguments
+    map( { _an $_, 1 } qw(fls fprint fprint0 printf) ),
+    map( { _an $_, 2 } qw(fprintf) ),
+
     # -fls file
     # -fprint file
     # -fprint0 file
     # -fprintf file format
+    # -printf format
+
+    # Actions with a delimited argument list
+    # -exec command [;+]
+    # -execdir command [;+]
     # -ok command ;
     # -okdir command ;
-    # -printf format
+    map( { _an $_, qr/^[;+]$/ } qw(exec execdir) ),
+    map( { _an $_, qr/^;$/ } qw(ok okdir) ),
 );
 
 # }}}1
@@ -418,12 +458,12 @@ sub _next_token {
 
             return (REV => $arg) if _is_valid_rev($arg);
 
-            die "I don't understand argument $arg before --";
+            die "I don't understand argument '$arg' before --";
 
         } else {                                    # Look for expressions
             my @expr = _get_expression_element($arg);
             return @expr if @expr;
-            die "I don't understand argument $arg after --";
+            die "I don't understand argument '$arg' after --";
         }
 
     } else {

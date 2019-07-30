@@ -215,6 +215,8 @@ my %opts = (
         #'Hash::Ordered' => '0.011',
         #'Import::Into' => '0',
 
+        'Math::Cartesian::Product' => '1.009',
+
         # 'Module::Find' => '0.12', # For bugfixes
                                     # - Use for finding plugins to load.
                                     # - May also need Module::Runtime.
