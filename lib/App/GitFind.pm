@@ -75,21 +75,20 @@ stored under key C<_>.
 sub _process_options {
     my $lrArgv = shift // [];
     my $hrOpts;
+    local *have = sub { $hrOpts->{switches}->{$_[0] // $_} };
 
     $hrOpts = App::GitFind::cmdline::Parse($lrArgv)
         or die 'Could not parse options successfully';
 
-    #DEBUG
-    say Dumper \$hrOpts;
-    exit(0);
+    #say Dumper $hrOpts;   #DEBUG
 
-    #Getopt::Long::HelpMessage(-exitval => 0, -verbose => 2) if $opts{man};
-    #Getopt::Long::HelpMessage(-exitval => 0) if $opts{h};
-    #Getopt::Long::VersionMessage(-exitval => 0) if $opts{v};
+    Getopt::Long::HelpMessage(-exitval => 0, -verbose => 2) if have('man');
+    Getopt::Long::HelpMessage(-exitval => 0, -verbose => 1)
+        if have('h') || have('help');
+    Getopt::Long::HelpMessage(-exitval => 0) if have('?') || have('usage');
+    Getopt::Long::VersionMessage(-exitval => 0) if have('V')||have('version');
 
-    #Getopt::Long::HelpMessage(-exitval => 2) unless @$lrArgv;
-
-    #return \%opts;
+    return $hrOpts;
 } #_process_options
 
 1; # End of App::GitFind

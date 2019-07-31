@@ -20,6 +20,27 @@ anywhere in a Git repo.  Unlike find(1), the search scope is the whole repo
 
 For more help, run C<git find --help> or C<git find --man>.
 
+=head1 OPTIONS AND ARGUMENTS
+
+Quick reference:
+
+=over
+
+=item Switches:
+
+Help (-?, --usage, -h, --help, --man); Version (-V, --version);
+Verbosity (-V).
+
+=item Refs:
+
+Anything accepted by git-rev-parse(1)
+
+=item Expression:
+
+Anything accepted by find(1), plus -ref/-rev
+
+=back
+
 =head1 DESCRIPTION
 
 =head2 Switches

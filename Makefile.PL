@@ -88,6 +88,10 @@ sub get_perl_filename {
 # Convenience target to run yapp
 yapp: $CMDLINE_TO
 
+# Convenience target to run cover
+cover:
+\tcover +ignore 'lib/perl5/' -test
+
 $CMDLINE_TO: $CMDLINE_FROM
 \t-mkdir "$CMDLINE_DIR"
 \tyapp -m "App::GitFind::cmdline" -o "\$@" "\$<"
@@ -149,7 +153,7 @@ my %opts = (
     VERSION_FROM     => $VERSION_FROM,
     ABSTRACT_FROM    => $VERSION_FROM,
     LICENSE          => 'mit',
-    PL_FILES         => {},
+    EXE_FILES        => [$SCRIPT],
     MIN_PERL_VERSION => '5.010',
 
     # In the following, if a specific version is listed, but no explanation
@@ -270,6 +274,9 @@ my %opts = (
                     'App::RewriteVersion' => '0',   # for perl-bump-version
                     'Module::Metadata' => '1.000016',
                     'Test::Kwalitee' => '0',
+                },
+                suggests => {
+                    'Devel::Cover' => '0',
                 },
             },
         },

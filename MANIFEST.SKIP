@@ -21,6 +21,8 @@ work-in-progress.txt
 \.exe$
 cmdline.pm$
     # Generated when you run `make`
+\.output$
+    # Parse::Yapp output
 
 # Fatpack
 fatpack

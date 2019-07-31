@@ -119,7 +119,7 @@ maybeexprplus:
 # TODO once the parser is solid and the tests are written:
 # collapse consecutive elements of the same type into flat lists.
 expr:       element
-        |   expr COMMA expr         { +{ seq => [@_[1,3]] } }
+        |   expr COMMA expr         { +{ SEQ => [@_[1,3]] } }
         |   expr OR expr            { +{ OR => [@_[1,3]] } }
                                     # "OR" because "or" is a Perl keyword
 
@@ -460,10 +460,10 @@ sub _consume_expression_element {
 # TODO un-bundle switches; handle switches with args.
 sub _consume_switch {
     my $lrArgv = shift;
-    if($lrArgv->[0] =~ /^-([a-zA-z0-9])$/) {    # non-bundled switch
+    if($lrArgv->[0] =~ /^-([a-zA-z0-9\?])$/) {    # non-bundled switch
         shift @$lrArgv;
         return (SWITCH => $1)
-    } elsif($lrArgv->[0] =~ /^--?(help|version|man)$/) {    # long switch
+    } elsif($lrArgv->[0] =~ /^--?(help|man|usage|version)$/) {  # long switch
         shift @$lrArgv;
         return (SWITCH => $1);
     }
