@@ -60,6 +60,19 @@ sub _merge {
     return $retval;
 }
 
+# qw(), but permitting comments.  Call as _qwc(<<EOT).  Thanks to ideas at
+# https://www.perlmonks.org/?node=qw%20comments .
+sub _qwc ($) {
+    my @retval;
+    for(split "\n", $_[0]//'') {
+        chomp;
+        s{#.*$}{};                      # Remove comments
+        s{(?:^\s+)|(?:\s+$)}{}g;        # Remove leading/trailing ws
+        push @retval, grep { length } split /\s+/;
+    }
+    return @retval;
+} #_qwc()
+
 # }}}1
 
 %}
@@ -156,31 +169,49 @@ element:    TEST
 
 # Helpers for defining these
 sub _a { ($_[0] => { token => 'ACTION', nparam => ($_[1]||0) }) }
-sub _t { ($_[0] => { token => 'TEST', nparam => ($_[1]||0) }) }
+sub _t { ($_[0] => { token => 'TEST', nparam => ($_[1]||0), index => ($_[2]||false) }) }
 
 # A map from argument name to a details hashref.  Valid keys in the hashref are:
 #   token:  The token type
 #   nparam: - if a regex, the argument ends with an @ARGV element matching
 #             that regex.
 #           - if an integer, the argument takes that many parameters (>=0).
+#   index:  (for tests only) Whether that test can be evaluated using only
+#           information from the index
 
 my %ARGS=(
     # TODO find(1) positional options, global options?
 
-    # No-argument tests
-    map( { _t $_ }
+    # No-argument tests -- all happen to be index tests
+    map( { _t $_, 0, true }
         qw(empty executable false nogroup nouser readable true writeable) ),
 
     # No-argument actions
     map( { _a $_ } qw(delete ls print print0 prune quit) ),
 
-    # One-argument tests
-    map( { _t $_, 1 } qw(amin anewer atime cmin cnewer ctime fstype gid
-        group ilname iname inum ipath iregex iwholename links lname mmin
-        mtime name newer path perm ref regex rev samefile size type uid
-        used user wholename xtype context) ),
+    # One-argument index tests
+    map( { _t $_, 1, true } qw(
+        cmin cnewer ctime
+        gid group ilname iname inum ipath iregex iwholename level
+        mmin mtime name
+        path
+        regex
+        size type uid
+        user wholename
+    ) ),
 
-    # -newerXY forms
+    # One-argument detailed tests
+    map( { _t $_, 1 } _qwc <<'EOT' ),
+        amin anewer atime fstype
+        links lname     # Actually index tests?
+        newer
+        perm            # Actually index test?
+        ref rev         # Maybe not detailed tests - TODO investigate this
+        samefile        # Actually index test?
+        used
+EOT
+
+    # -newerXY forms - all are detailed tests
     map( { _t('newer' . join('', @$_), 1) }
         cartesian {1} [qw(a B c m)], [qw(a B c m t)] ),
 
@@ -199,6 +230,7 @@ my %ARGS=(
     # -ipath pattern
     # -iregex pattern
     # -iwholename pattern
+    # -level n      # not in find(1) - succeed if the item is at level n
     # -links n
     # -lname pattern
     # -mmin n
@@ -221,8 +253,8 @@ my %ARGS=(
     # -used n
     # -user uname
     # -wholename pattern
-    # -xtype c
-    # -context pattern
+    # -xtype c              # Not supported for now
+    # -context pattern      # Not supported for now
 
     # Actions with a fixed number of arguments
     map( { _a $_, 1 } qw(fls fprint fprint0 printf) ),

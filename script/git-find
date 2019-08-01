@@ -28,8 +28,8 @@ Quick reference:
 
 =item Switches:
 
-Help (-?, --usage, -h, --help, --man); Version (-V, --version);
-Verbosity (-V).
+Help (-?, --usage; -h, --help; --man); Version (-V, --version);
+Verbosity (-v); Warnings (-W).
 
 =item Refs:
 
@@ -50,10 +50,35 @@ not be interleaved in with the L</Expression>, if one is given.
 
 =over
 
+=item B<-?>, B<--usage>
+
+Print a brief usage reminder
+
+=item B<-h>, B<--help>
+
+Print basic help
+
+=item B<--man>
+
+Show full help (equivalent to C<man git-find>)
+
 =item B<-u>
 
 Unrestricted search.  Normally, git-find does not search ignored files.
-When this option is given, it does search those files.
+When this option is given, it does search those files.  However, it still
+skips C<.git/> directories.
+
+=item B<-v>
+
+Increase verbosity.  May be given multiple times.
+
+=item B<-V>, B<--version>
+
+Print version information and exit
+
+=item B<-W>, B<-Wname>
+
+Enable warning B<name>, or all warnings if no B<name> is given.
 
 =back
 
@@ -91,13 +116,19 @@ Sequence: separates items to be evaluated separately.
 
 =head2 Refs
 
-By default, git-find searches the working tree that is currently checked out.
+By default, git-find searches the current index (cache).  This is the same
+as the default for git-ls-files(1).
 You can specify one or more refs to search using any of the forms described
 in L<gitrevisions(7)|https://git-scm.com/docs/gitrevisions>.
 
-You can specify multiple ranges of refs separated by C<-o> (or its equivalent
-forms given in L</Operators>) or C<,>.  Comma is treated as equivalent to C<-o>
-when separating refs.
+You can specify the special value C<]]> (a double right bracket) to search
+the working tree that is currently checked out.
+(Mnemonic: search I<right> here.)  If you have an actual ref called "]]",
+git-find won't be able to help you.  Sorry!
+
+    TODO? You can specify multiple ranges of refs separated by C<-o> (or its
+    equivalent forms given in L</Operators>) or C<,>.  Comma is treated as
+    equivalent to C<-o> when separating refs.
 
 =head2 Expression
 
@@ -111,16 +142,46 @@ Tests are of two types:
 
 =over
 
-=item Name-only tests
+=item Index tests
 
-These are tests that only require the name of the file.  They are:
-C<-name>, C<-iname>, C<-path>, C<-ipath>, C<-regex>, and C<-iregex>.
+These are tests that only require information from the git index, such
+as the name of the file and whether it is executable.  They are (at least on
+Unix-like systems):
+
+C<-cmin>, C<-cnewer>, C<-ctime>, C<-empty>, C<-executable>, C<-false>, C<-gid>,
+C<-group>, C<-ilname>, C<-iname>, C<-inum>, C<-ipath>, C<-iregex>,
+C<-iwholename>, C<-level>, C<-mmin>, C<-mtime>, C<-name>, C<-nogroup>,
+C<-nouser>, C<-path>, C<-readable>, C<-regex>, C<-size>, C<-true>, C<-type>,
+C<-uid>, C<-user>, C<-wholename>, C<-writeable>
+
+    TODO also -links, -lname, -perm, -samefile, -xtype?
 
 =item Detailed tests
 
-All tests other than name-only tests may require
+All tests other than index tests may require
 checking out a worktree with one or more of the given refs.
-Therefore, they may be much slower than name-only tests.
+Therefore, they may be much slower than name-only tests.  However, if the only
+ref given is C<]]> (working directory), detailed tests can be executed without
+checking out a worktree, so the slowdown is not as bad.
+
+=back
+
+=head1 DIFFERENCES FROM FIND(1)
+
+In git-find but not in find(1): -ref, -rev
+
+In find(1) but not in git-find: find switches; TODO -xtype, -context?
+
+=head1 WARNINGS
+
+If the C<-W> option is given, warnings are enabled.  Possible warnings are:
+
+=over
+
+=item B<-Wdetailed>
+
+Warn if a detailed test is used on a search scope other than C<]]> (the
+current working tree).
 
 =back
 
