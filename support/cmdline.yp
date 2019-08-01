@@ -10,19 +10,13 @@
 
 # Imports {{{1
 
-use Data::Dumper;   # DEBUG
-
+use 5.010;
 use strict;
 use warnings;
-use 5.010;
 
-use Carp qw(croak);
-use Hash::Merge;
-
+use App::GitFind::Base;
 use App::GitFind::Actions ();
-
-use constant true => !!1;
-use constant false => !!0;
+use Hash::Merge;
 
 # }}}1
 # Documentation {{{1

@@ -202,6 +202,7 @@ my %opts = (
 
         #'constant' => '0',
         #'Data::Dumper' => '2.154',      # For Maxrecurse
+        'Data::Dumper::Compact' => '0',
         #'Exporter' => '0',
         #'feature' => '0',
         # 'File::Find::Rule' => '0',    # - might be nice for finding files

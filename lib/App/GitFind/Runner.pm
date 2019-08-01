@@ -8,13 +8,9 @@ our $VERSION = '0.000001';
 
 use App::GitFind::Class qw(expr);
 
-use constant true => !!1;
-use constant false => !!0;
-
 # Imports
+use App::GitFind::Base;
 use App::GitFind::Actions qw(argdetails);
-use Carp qw(croak);
-use Data::Dumper;   # Actually used in error messages
 use Getargs::Mixed;
 use Git::Raw;
 
@@ -41,33 +37,41 @@ Process a single file, represented as an L<App::GitFind::Entry> instance.
 Returns the Boolean result of the expression.  Note that the specific
 exit codes from C<-exec> and similar actions are lost.  Usage:
 
-    $runner->process($entry);
+    $runner->process([-entry=>]$entry);
 
 =cut
 
 sub process {
-    my ($self, %args) = parameters('self',[qw(expr)], @_);
-    my $expr = $args{expr};
+    my ($self, %args) = parameters('self',[qw(entry)], @_);
+    @_ = ($self, $args{entry}, $self->expr);
+    goto &_process;
+} #process()
+
+# Internal: $self->_process($entry, $expr)
+sub _process {
+    my ($self, $entry, $expr) = @_;
     my $func;   # What will handle the expression
     my @arg;    # Args to $func
 
+    say "Processing ", ddc($expr) if $TRACE;
+
     if(ref $expr eq 'HASH') {     # SEQ, AND, OR, NOT
-        die "Expression has more than one key!  " . Dumper($expr)
+        die "Expression has more than one key!  " . ddc($expr)
             if scalar keys %{$expr} > 1;
         my $operation = (keys %{$expr})[0];
         my $func = $self->can("process_$operation");
-        @arg = $expr->{$operation};
+        @arg = ($entry, $expr->{$operation});
 
     } else {                            # Basic elements
         my $func = $self->can("do_$expr");
-        my @arg = $expr;    # in case I later want to alias functions
+        my @arg = $entry;
     }
 
-    die "I don't know how to process the expression: " . Dumper($expr)
+    die "I don't know how to process the expression: " . ddc($expr)
         unless $func;
 
     return $self->$func(@arg);
-} #process()
+} #_process()
 
 # }}}1
 # === Logical operators === {{{1
@@ -76,7 +80,7 @@ sub process {
 
 Process a negation of a single expression.  Usage:
 
-    $runner->process_NOT([-exprs=>]$expr);
+    $runner->process_NOT($entry, $expr);
 
 Even though the name of the parameter is C<exprs> for consistency with
 AND, OR, and SEQ, only a single expression is allowed.
@@ -84,27 +88,27 @@ AND, OR, and SEQ, only a single expression is allowed.
 =cut
 
 sub process_NOT {
-    my ($self, %args) = parameters('self',[qw(exprs)], @_);
+    my ($self, $entry, $expr) = @_;
     croak "I can't take an array of expressions"
-        if ref $args{exprs} eq 'ARRAY';
+        if ref $expr eq 'ARRAY';
 
-    return !$self->process($args{exprs});
+    return !$self->_process($entry, $expr);
 } #process_NOT()
 
 =head2 process_AND
 
 Process a conjunction of expressions.  Usage:
 
-    $runner->process_AND([-exprs=>][$expr1, ...]);
+    $runner->process_AND($entry, [$expr1, ...]);
 
 =cut
 
 sub process_AND {
-    my ($self, %args) = parameters('self',[qw(exprs)], @_);
+    my ($self, $entry, $lrExprs) = @_;
     my $retval;
 
-    for(@{$args{exprs}}) {
-        $retval = $self->process($_);
+    for(@$lrExprs) {
+        $retval = $self->_process($entry, $_);
         last unless $retval;    # Short-circuit
     }
     return $retval;
@@ -114,16 +118,16 @@ sub process_AND {
 
 Process a disjunction of expressions.  Usage:
 
-    $runner->process_OR([-exprs=>][$expr1, ...]);
+    $runner->process_OR($entry, [$expr1, ...]);
 
 =cut
 
 sub process_OR {
-    my ($self, %args) = parameters('self',[qw(exprs)], @_);
+    my ($self, $entry, $lrExprs) = @_;
     my $retval;
 
-    for(@{$args{exprs}}) {
-        $retval = $self->process($_);
+    for(@$lrExprs) {
+        $retval = $self->_process($entry, $_);
         last if $retval;    # Short-circuit
     }
     return $retval;
@@ -133,27 +137,29 @@ sub process_OR {
 
 Process a sequence of expressions.  Usage:
 
-    $runner->process_SEQ([-exprs=>][$expr1, ...]);
+    $runner->process_SEQ($entry, [$expr1, ...]);
 
 =cut
 
 sub process_SEQ {
-    my ($self, %args) = parameters('self',[qw(exprs)], @_);
+    my ($self, $entry, $lrExprs) = @_;
     my $retval;
 
-    $retval = $self->process($_) foreach @{$args{exprs}};
+    $retval = $self->_process($entry, $_) foreach @{$lrExprs};
     return $retval;
 } #process_SEQ()
 
 # }}}1
-# === Class/instance routines === {{{1
+# === Tests/actions === {{{1
 
+sub do_true { true }
+
+sub do_false { false }
 
 # }}}1
 
 1; # End of App::GitFind::Runner
 __END__
-
 # === Rest of the docs === {{{1
 
 =head1 AUTHOR

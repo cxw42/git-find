@@ -4,13 +4,9 @@ use 5.010;
 use strict;
 use warnings;
 
+use App::GitFind::Base;
 use App::GitFind::cmdline;
 use Getopt::Long 2.34 ();
-#    qw(GetOptionsFromArray :config),
-#    qw(auto_help auto_version),     # handle -?, --help, --version
-#    qw(passthrough require_order),  # stop at the first unrecognized.  TODO
-#    qw(no_getopt_compat gnu_compat bundling);   # --foo, -x, no +x
-
 use Git::Raw;
 
 our $VERSION = '0.000001';
@@ -59,8 +55,7 @@ Does the work.
 
 sub run {
     my $repo = Git::Raw::Repository->open('.');
-    use Data::Dumper;
-    say "Repo: ", Dumper $repo;
+    say "Repo: ", ddc $repo if $TRACE;
 } #run()
 
 =head1 INTERNALS
@@ -80,7 +75,7 @@ sub _process_options {
     $hrOpts = App::GitFind::cmdline::Parse($lrArgv)
         or die 'Could not parse options successfully';
 
-    #say Dumper $hrOpts;   #DEBUG
+    say ddc $hrOpts if $TRACE;
 
     Getopt::Long::HelpMessage(-exitval => 0, -verbose => 2) if have('man');
     Getopt::Long::HelpMessage(-exitval => 0, -verbose => 1)

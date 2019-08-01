@@ -3,10 +3,11 @@ use warnings;
 use lib::relative '.';
 use TestKit;
 
+#use Data::Dumper;
+
 use App::GitFind::cmdline;
 my $p = \&App::GitFind::cmdline::Parse;
 
-use Data::Dumper;
 
 my $ok=List::AutoNumbered->new(__LINE__);
 $ok->load([qw(-u)], {switches=>{u=>true}})->    # switch
