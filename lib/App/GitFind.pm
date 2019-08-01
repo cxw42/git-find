@@ -6,6 +6,7 @@ use warnings;
 
 use App::GitFind::Base;
 use App::GitFind::cmdline;
+use App::GitFind::Runner;
 use Getopt::Long 2.34 ();
 use Git::Raw;
 
@@ -44,18 +45,48 @@ C<exit()>, e.g., on C<--help>.
 sub new {
     my ($package, $lrArgv) = @_;
     my $self = _process_options($lrArgv);
+
+    # Handle default -print
+    if(!$self->{expr}) {            # Default: -print
+        $self->{expr} = 'print';
+
+    } elsif(!$self->{sawnpa}) {     # With an expr: -print unless an action
+                                    # other than -prune was given
+        $self->{expr} = +{
+            AND => [ $self->{expr}, 'print' ]
+        };
+    }
+
+    # Add default for missing revs
+    $self->{revs} = [undef] unless $self->{revs};
+
+    $self->{repo} = Git::Raw::Repository->open('.');
+    print "Repo: ", ddc $self->{repo} if $TRACE;
+
     bless $self, $package;
 } #new()
 
 =head2 run
 
-Does the work.
+Does the work.  Call as C<< exit($obj->run()) >>.  Returns a shell exit code.
 
 =cut
 
 sub run {
-    my $repo = Git::Raw::Repository->open('.');
-    say "Repo: ", ddc $repo if $TRACE;
+    my $self = shift;
+    my $runner = App::GitFind::Runner->new(-expr => $self->{expr});
+
+    my @entries;
+    # TODO find files in -scope => $self->{revs}, -repo => $self->{repo}
+    push @entries, './TEST!';      # DEBUG
+
+    for(@entries) {
+        print "$_: " if $TRACE;
+        my $ok = $runner->process($_);
+        print $ok ? 'passed' : 'failed', "\n" if $TRACE;
+    }
+
+    return 0;   # TODO return 1 if anything failed.
 } #run()
 
 =head1 INTERNALS
@@ -75,7 +106,7 @@ sub _process_options {
     $hrOpts = App::GitFind::cmdline::Parse($lrArgv)
         or die 'Could not parse options successfully';
 
-    say ddc $hrOpts if $TRACE;
+    $TRACE = scalar @{$hrOpts->{switches}->{v} // []};
 
     Getopt::Long::HelpMessage(-exitval => 0, -verbose => 2) if have('man');
     Getopt::Long::HelpMessage(-exitval => 0, -verbose => 1)

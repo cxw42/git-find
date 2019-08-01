@@ -87,19 +87,24 @@ sub _merge {
 # Rules
 
 cmdline:
-                                { +{} }     # empty
-        |   expr                { +{ expr => $_[1] } }
-        |   switches_and_revs maybeexprplus     { _merge($_[1], $_[2]) }
+                                    { +{} }     # empty
+        |   expr                    { +{ expr => $_[1] } }
+        |   switches_and_revs maybeexprplus
+                                    { _merge($_[1], $_[2]) }
         ;
 
 # Switches
 
-switches_and_revs:   SWITCH     { +{ switches => {$_[1]=>true} } }
-        |   REV                 { +{ revs => [$_[1]] } }
+switches_and_revs:   SWITCH         { +{ switches => {$_[1]=>[true]} } }
+                                    # arrayref so @{{switches}->{foo}} will
+                                    # always work.  That way we can test for
+                                    # switches specified multiple times.
+
+        |   REV                     { +{ revs => [$_[1]] } }
         |   switches_and_revs SWITCH
-                                { _merge($_[1], +{ switches => {$_[2]=>true} }) }
+                                    { _merge($_[1], +{ switches => {$_[2]=>[true]} }) }
         |   switches_and_revs REV
-                                { _merge($_[1], +{ revs => [$_[2]] }) }
+                                    { _merge($_[1], +{ revs => [$_[2]] }) }
         ;
 
 # Expressions.  Since "and", "or", and "not" are keywords in Perl, the
@@ -140,6 +145,10 @@ subsequent_expr:    # Everything higher-precedence than AND
 
 element:    TEST
         |   ACTION
+            {
+                $_[0]->YYData->{SAW_NON_PRUNE_ACTION} = true if $_[1] ne 'prune';
+                $_[1];
+            }
         ;
 
 %%
@@ -479,11 +488,16 @@ sub Parse {
     $hrData->{ONLY_EXPRESSIONS} = false;    # true once we hit '--'
     $hrData->{ARGV} = $lrArgv;
 
-    return $parser->YYParse(yylex => \&_next_token,
+    # Keep track of whether an action other than -prune has been seen.
+    # If not, -print is added automatically.
+    $hrData->{SAW_NON_PRUNE_ACTION} = false;
+
+    my $hrRetval = $parser->YYParse(yylex => \&_next_token,
         yyerror => \&_report_error,
         (@_ ? (yydebug => $_[0]) : ()),
     );
-
+    $hrRetval->{sawnpa} = $hrData->{SAW_NON_PRUNE_ACTION} if $hrRetval;
+    return $hrRetval;
 } #Parse()
 
 # }}}1

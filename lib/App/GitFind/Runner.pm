@@ -6,7 +6,8 @@ use warnings;
 
 our $VERSION = '0.000001';
 
-use App::GitFind::Class qw(expr);
+use parent 'App::GitFind::Class';
+use Class::Tiny qw(expr);
 
 # Imports
 use App::GitFind::Base;
@@ -53,18 +54,18 @@ sub _process {
     my $func;   # What will handle the expression
     my @arg;    # Args to $func
 
-    say "Processing ", ddc($expr) if $TRACE;
+    print "Processing ", ddc($expr) if $TRACE;
 
     if(ref $expr eq 'HASH') {     # SEQ, AND, OR, NOT
         die "Expression has more than one key!  " . ddc($expr)
             if scalar keys %{$expr} > 1;
         my $operation = (keys %{$expr})[0];
-        my $func = $self->can("process_$operation");
+        $func = $self->can("process_$operation");
         @arg = ($entry, $expr->{$operation});
 
     } else {                            # Basic elements
-        my $func = $self->can("do_$expr");
-        my @arg = $entry;
+        $func = $self->can("do_$expr");
+        @arg = $entry;
     }
 
     die "I don't know how to process the expression: " . ddc($expr)
@@ -155,6 +156,8 @@ sub process_SEQ {
 sub do_true { true }
 
 sub do_false { false }
+
+sub do_print { say $_[1]; true }    # $_[0] = self
 
 # }}}1
 
