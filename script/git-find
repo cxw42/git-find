@@ -110,7 +110,8 @@ Logical or
 
 =item B<,>
 
-Sequence: separates items to be evaluated separately.
+Sequence: separates items to be evaluated separately.  The return value
+is that of the last item in the sequence.
 
 =back
 

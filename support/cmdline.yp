@@ -19,7 +19,7 @@ use 5.010;
 use Carp qw(croak);
 use Hash::Merge;
 
-use App::GitFind::Actions ':all';
+use App::GitFind::Actions ();
 
 use constant true => !!1;
 use constant false => !!0;
@@ -318,7 +318,7 @@ sub _consume_expression_element {
     if($lrArgv->[0] =~ $ARGTEST_cached) {
         #say STDERR "#   - matched";
         my $arg = $1;
-        my %opts = %{App::GitFind::Actions::arg($arg)};
+        my %opts = %{App::GitFind::Actions::argdetails($arg)};
 
         # No-argument tests or actions
         unless($opts{nparam}>0) {

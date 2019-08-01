@@ -7,14 +7,13 @@ use warnings;
 our $VERSION = '0.000001';
 
 use parent 'Exporter';
-use vars::i '@EXPORT_OK' => qw(ARGTEST arg);
+use vars::i '@EXPORT_OK' => qw(ARGTEST argdetails);
 use vars::i '%EXPORT_TAGS' => { all => [@EXPORT_OK] };
 
 use constant true => !!1;
 use constant false => !!0;
 
 # Imports
-use Git::Raw;
 use Math::Cartesian::Product;
 
 # === Documentation === {{{1
@@ -25,7 +24,9 @@ App::GitFind::Actions - Worker functions for App::GitFind
 
 =head1 SYNOPSIS
 
-See L<App::GitFind>.
+TODO
+
+=head1 FUNCTIONS
 
 =cut
 
@@ -154,7 +155,14 @@ EOT
 );
 
 # }}}1
-# Accessors {{{1
+# === Accessors for argument information === {{{1
+
+=head2 ARGTEST
+
+Returns a regex that will match any arg, with C<-> or C<--> prefix.  The arg
+is captured into $1.  Prototyped as C<()>.
+
+=cut
 
 sub ARGTEST ()
 {   # Make a regex that will match any arg, with - or --.
@@ -162,8 +170,16 @@ sub ARGTEST ()
     return qr{^--?($x)$};
 } #ARGTEST
 
-sub arg {
-    return $ARGS{$_[0]//''}//{};
+=head2 argdetails
+
+Returns a hashref of details about the arg, or undef.  Example:
+
+    my $hr = argdetails('true');
+
+=cut
+
+sub argdetails {
+    return $ARGS{$_[0]//''};
 }
 
 # }}}1
