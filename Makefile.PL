@@ -204,6 +204,7 @@ my %opts = (
         #'Data::Dumper' => '2.154',      # For Maxrecurse
         'Data::Dumper::Compact' => '0',
         #'Exporter' => '0',
+        'Fcntl' => '0',
         #'feature' => '0',
         # 'File::Find::Rule' => '0',    # - might be nice for finding files
         #'File::Glob' => '0',
@@ -235,6 +236,7 @@ my %opts = (
 
         'Path::Class' => '0.37',
         'Pod::Usage' => '0',
+        'POSIX' => '0',
         # 'Probe::Perl' => '0', # For perl interpreter file location or other info.
 
         #'Quote::Code' => '1.01',

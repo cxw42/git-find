@@ -12,6 +12,7 @@ use Class::Tiny qw(expr);
 # Imports
 use App::GitFind::Base;
 use App::GitFind::Actions qw(argdetails);
+use App::GitFind::FileStatLs ();
 use Getargs::Mixed;
 use Git::Raw;
 
@@ -157,7 +158,9 @@ sub do_true { true }
 
 sub do_false { false }
 
-sub do_print { say $_[1]; true }    # $_[0] = self
+sub do_print { say $_[1]; true }        # $_[0] = self
+
+sub do_ls { print App::GitFind::FileStatLs::ls_stat($_[1]); true } # $_[0] = self
 
 # }}}1
 

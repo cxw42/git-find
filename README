@@ -17,7 +17,7 @@ SUBROUTINES/METHODS
     "exit()", e.g., on "--help".
 
   run
-    Does the work.
+    Does the work.  Call as "exit($obj->run())".  Returns a shell exit code.
 
 AUTHOR
     Christopher White, "<cxw at cpan.org>"

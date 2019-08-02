@@ -21,7 +21,7 @@ The constructor.  Takes an arrayref of arguments, e.g., `\@ARGV`.  May
 
 ## run
 
-Does the work.
+Does the work.  Call as `exit($obj->run())`.  Returns a shell exit code.
 
 # AUTHOR
 
