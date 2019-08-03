@@ -78,4 +78,3 @@ fatpack*
 # Parse::Yapp
 *.output
 support/cmdline.pm
-/lib/App/GitFind/cmdline.pm

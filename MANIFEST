@@ -3,6 +3,7 @@ lib/App/GitFind.pm
 lib/App/GitFind/Actions.pm
 lib/App/GitFind/Base.pm
 lib/App/GitFind/Class.pm
+lib/App/GitFind/cmdline.pm
 lib/App/GitFind/FileStatLs.pm
 lib/App/GitFind/Runner.pm
 Makefile.PL

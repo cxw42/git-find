@@ -19,7 +19,7 @@ work-in-progress.txt
 # Things we generate
 \.o(bj)?$
 \.exe$
-cmdline.pm$
+support.*cmdline\.pm$
     # Generated when you run `make`
 \.output$
     # Parse::Yapp output
