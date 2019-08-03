@@ -102,11 +102,11 @@ authortest:
 testhere:   # Run the tests from lib rather than blib
 \tprove -lj4
 
-README.md: $VERSION_FROM Makefile.PL $make_readme_md
-\t"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f md
+README.md: $SCRIPT Makefile.PL $make_readme_md
+\t-"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f md
 
-README: $VERSION_FROM Makefile.PL $make_readme_md
-\t"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f text
+README: $SCRIPT Makefile.PL $make_readme_md
+\t-"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f text
 
 # The following command line is rather bizarre so that it can be run on
 # bash or cmd.  '\$\$' collapses to a single dollar sign, and the string eval

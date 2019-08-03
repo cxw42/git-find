@@ -20,6 +20,8 @@ anywhere in a Git repo.  Unlike find(1), the search scope is the whole repo
 
 For more help, run C<git find --help> or C<git find --man>.
 
+B<NOTE:> most of this is not yet implemented :) .  Contributions welcome!
+
 =head1 OPTIONS AND ARGUMENTS
 
 Quick reference:
@@ -108,7 +110,7 @@ is given.
 
 Logical or
 
-=item B<,>
+=item B<,> (a single comma)
 
 Sequence: separates items to be evaluated separately.  The return value
 is that of the last item in the sequence.

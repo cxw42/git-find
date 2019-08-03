@@ -1,28 +1,189 @@
-# App::GitFind - Find files anywhere in a Git repository
+# git-find - Find files anywhere in a Git repository
 
 
 # SYNOPSIS
 
-This is the implementation of the [git-find](https://metacpan.org/pod/git-find) command (q.v.).  To use it
-from Perl code:
+    git find [SWITCHES] [REFS] [--] [EXPRESSION]
 
-    use App::GitFind;
-    exit App::GitFind->new(\@ARGV)->run;
+This command searches for files satisfying the `EXPRESSION`, a la find(1),
+anywhere in a Git repo.  Unlike find(1), the search scope is the whole repo
+(for the `REFS` you specify) regardless of the current directory.
 
-# SUBROUTINES/METHODS
+For more help, run `git find --help` or `git find --man`.
 
-## new
+**NOTE:** most of this is not yet implemented :) .  Contributions welcome!
 
-The constructor.  Takes an arrayref of arguments, e.g., `\@ARGV`.  May
-`exit()`, e.g., on `--help`.
+# OPTIONS AND ARGUMENTS
 
-## run
+Quick reference:
 
-Does the work.  Call as `exit($obj->run())`.  Returns a shell exit code.
+- Switches:
+
+    Help (-?, --usage; -h, --help; --man); Version (-V, --version);
+    Verbosity (-v); Warnings (-W).
+
+- Refs:
+
+    Anything accepted by git-rev-parse(1)
+
+- Expression:
+
+    Anything accepted by find(1), plus -ref/-rev
+
+# DESCRIPTION
+
+## Switches
+
+These are options controlling the overall behaviour of git-find.  They may
+not be interleaved in with the ["Expression"](#expression), if one is given.
+
+- **-?**, **--usage**
+
+    Print a brief usage reminder
+
+- **-h**, **--help**
+
+    Print basic help
+
+- **--man**
+
+    Show full help (equivalent to `man git-find`)
+
+- **-u**
+
+    Unrestricted search.  Normally, git-find does not search ignored files.
+    When this option is given, it does search those files.  However, it still
+    skips `.git/` directories.
+
+- **-v**
+
+    Increase verbosity.  May be given multiple times.
+
+- **-V**, **--version**
+
+    Print version information and exit
+
+- **-W**, **-Wname**
+
+    Enable warning **name**, or all warnings if no **name** is given.
+
+## Operators
+
+In the ["Refs"](#refs) or ["Expression"](#expression), you can specify multiple items joined by
+logical operators.  They are listed below in order of descending precedence.
+Each operator must be separated by whitespace from any adjacent parameters.
+Operators short-circuit.
+
+- **( )**, **\[ \]**
+
+    Grouping.  Parentheses and brackets are interchangeable.
+
+- **-not**, **--not**, **!**, **^**
+
+    Logical negation.
+
+- **-a**, **--a**, **-and**, **--and**, **&&**
+
+    Logical and.  This is the default operator between terms if no operator
+    is given.
+
+- **-o**, **--o**, **-or**, **--or**, **||**
+
+    Logical or
+
+- **,** (a single comma)
+
+    Sequence: separates items to be evaluated separately.  The return value
+    is that of the last item in the sequence.
+
+## Refs
+
+By default, git-find searches the current index (cache).  This is the same
+as the default for git-ls-files(1).
+You can specify one or more refs to search using any of the forms described
+in [gitrevisions(7)](https://git-scm.com/docs/gitrevisions).
+
+You can specify the special value `]]` (a double right bracket) to search
+the working tree that is currently checked out.
+(Mnemonic: search _right_ here.)  If you have an actual ref called "\]\]",
+git-find won't be able to help you.  Sorry!
+
+    TODO? You can specify multiple ranges of refs separated by C<-o> (or its
+    equivalent forms given in L</Operators>) or C<,>.  Comma is treated as
+    equivalent to C<-o> when separating refs.
+
+## Expression
+
+The expression includes one or more elements separated by ["Operators"](#operators).
+Elements can be options, tests, or operators.
+
+Elements of expressions can be specified in a form similar to find(1).
+Long elements (e.g., `-name`) can start with a single or a double dash.
+
+Tests are of two types:
+
+- Index tests
+
+    These are tests that only require information from the git index, such
+    as the name of the file and whether it is executable.  They are (at least on
+    Unix-like systems):
+
+    `-cmin`, `-cnewer`, `-ctime`, `-empty`, `-executable`, `-false`, `-gid`,
+    `-group`, `-ilname`, `-iname`, `-inum`, `-ipath`, `-iregex`,
+    `-iwholename`, `-level`, `-mmin`, `-mtime`, `-name`, `-nogroup`,
+    `-nouser`, `-path`, `-readable`, `-regex`, `-size`, `-true`, `-type`,
+    `-uid`, `-user`, `-wholename`, `-writeable`
+
+        TODO also -links, -lname, -perm, -samefile, -xtype?
+
+- Detailed tests
+
+    All tests other than index tests may require
+    checking out a worktree with one or more of the given refs.
+    Therefore, they may be much slower than name-only tests.  However, if the only
+    ref given is `]]` (working directory), detailed tests can be executed without
+    checking out a worktree, so the slowdown is not as bad.
+
+# DIFFERENCES FROM FIND(1)
+
+In git-find but not in find(1): -ref, -rev
+
+In find(1) but not in git-find: find switches; TODO -xtype, -context?
+
+# WARNINGS
+
+If the `-W` option is given, warnings are enabled.  Possible warnings are:
+
+- **-Wdetailed**
+
+    Warn if a detailed test is used on a search scope other than `]]` (the
+    current working tree).
 
 # AUTHOR
 
 Christopher White, `<cxw at cpan.org>`
+
+# BUGS
+
+Please report any bugs or feature requests through the GitHub interface at
+[https://github.com/cxw42/git-find/issues](https://github.com/cxw42/git-find/issues).  I will be notified, and then
+you'll automatically be notified of progress on your bug as I make changes.
+
+# SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc App::GitFind
+
+You can also look for information at:
+
+- GitHub (report bugs here)
+
+    [https://github.com/cxw42/git-find](https://github.com/cxw42/git-find)
+
+- MetaCPAN
+
+    [https://metacpan.org/release/App-GitFind](https://metacpan.org/release/App-GitFind)
 
 # LICENSE AND COPYRIGHT
 
@@ -47,7 +208,6 @@ included in all copies or substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
 NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
 HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
