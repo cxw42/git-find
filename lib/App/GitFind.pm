@@ -20,14 +20,11 @@ App::GitFind - Find files anywhere in a Git repository
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
+This is the implementation of the L<git-find> command (q.v.).  To use it
+from Perl code:
 
     use App::GitFind;
     exit App::GitFind->new(\@ARGV)->run;
-
-See L<git-find> for more usage information.
 
 =head1 SUBROUTINES/METHODS
 
