@@ -9,8 +9,10 @@ use App::GitFind::cmdline;
 use App::GitFind::Runner;
 use Getopt::Long 2.34 ();
 use Git::Raw;
+use Iterator::Simple;
+use Path::Class;
 
-our $VERSION = '0.000001';
+our $VERSION = '0.000001';  # TRIAL
 
 # === Documentation === {{{1
 
@@ -57,8 +59,13 @@ sub new {
     # Add default for missing revs
     $self->{revs} = [undef] unless $self->{revs};
 
-    $self->{repo} = Git::Raw::Repository->open('.');
-    print "Repo: ", ddc $self->{repo} if $TRACE;
+    print "Options: ", ddc $self if $TRACE>1;
+
+    # find the repo we're in
+    $self->{repo} = eval { Git::Raw::Repository->discover('.'); };
+    die "Not in a Git repository: $@\n" if $@;
+    $self->{repotop} = dir($self->{repo}->commondir)->parent;
+    say "Repo in ", $self->{repo}->commondir if $TRACE;     # .git dir
 
     bless $self, $package;
 } #new()
@@ -73,13 +80,11 @@ sub run {
     my $self = shift;
     my $runner = App::GitFind::Runner->new(-expr => $self->{expr});
 
-    my @entries;
-    # TODO find files in -scope => $self->{revs}, -repo => $self->{repo}
-    push @entries, './TEST!';      # DEBUG
+    my $iter = $self->_entry_iterator;
 
-    for(@entries) {
-        print "$_: " if $TRACE;
-        my $ok = $runner->process($_);
+    while (defined(my $entry = $iter->next)) {
+        print "$entry: " if $TRACE;
+        my $ok = $runner->process($entry);
         print $ok ? 'passed' : 'failed', "\n" if $TRACE;
     }
 
@@ -87,6 +92,49 @@ sub run {
 } #run()
 
 =head1 INTERNALS
+
+=head2 _entry_iterator
+
+Create an iterator for the entries to be processed.  Returns an
+L<Iterator::Simple>.
+
+=cut
+
+sub _entry_iterator {
+    my $self = shift;
+
+    return Iterator::Simple::ichain(
+        map { $self->_iterator_for($_) } @{$self->{revs}}
+    );
+
+} #_entry_iterator
+
+=head2 _iterator_for
+
+Return an iterator for a particular rev.
+
+=cut
+
+sub _iterator_for {
+    my ($self, $rev) = @_;
+    # TODO find files in scope $self->{revs}, repo $self->{repo}
+
+    if(!defined $rev) {     # The index of the current repo
+        return Iterator::Simple::iter(['./TEST!!']);    # DEBUG
+
+    } elsif($rev eq ']]') { # The current working directory
+        require File::Next;
+        return File::Next::everything($self->{repotop}->relative);
+            # TODO add an option to report absolute paths instead of relative
+            # TODO skip .git and .gitignored files unless -u
+            # TODO optimization: if -type f or -type d is at the top level,
+            #       use File::Next::files() or dirs() respectively.
+
+    } else {
+        die "I don't yet know how to search through rev $_";
+    }
+
+} #_iterator_for
 
 =head2 _process_options
 

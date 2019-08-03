@@ -3,14 +3,11 @@
 
 # SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
+This is the implementation of the [git-find](https://metacpan.org/pod/git-find) command (q.v.).  To use it
+from Perl code:
 
     use App::GitFind;
     exit App::GitFind->new(\@ARGV)->run;
-
-See [git-find](https://metacpan.org/pod/git-find) for more usage information.
 
 # SUBROUTINES/METHODS
 

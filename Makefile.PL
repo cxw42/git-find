@@ -209,6 +209,7 @@ my %opts = (
         # 'File::Find::Rule' => '0',    # - might be nice for finding files
         #'File::Glob' => '0',
         #'File::Globstar' => '0.5',      # Fewer dependencies
+        'File::Next' => '1.16',
         #'File::Path::Tiny' => '0.9',
         #'File::pushd' => '1.013',
         #'File::Spec' => '0',
@@ -220,6 +221,7 @@ my %opts = (
         'Hash::Merge' => '0.299',
         #'Hash::Ordered' => '0.011',
         #'Import::Into' => '0',
+        'Iterator::Simple' => '0.07',
 
         'Math::Cartesian::Product' => '1.009',
 
