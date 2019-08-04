@@ -155,6 +155,31 @@ EOT
 );
 
 # }}}1
+# === Argument-validation functions === {{{1
+# Special validators for ok, okdir, exec, and execdir.
+# Validators return undefined if validation passes, and an error message
+# otherwise.  Validators take the command and the located parameters
+# in @_.
+
+$ARGS{exec}->{validator} = sub {
+    return "need at least a command name" unless $#_>1;
+    if($_[$#_] eq '+') {
+        return "need a {}" unless grep { $_ eq '{}' } @_;
+        return "{} can't be the first argument to $_[0]" if $_[1] eq '{}';
+    }
+    return undef;
+};
+
+$ARGS{execdir}->{validator} = $ARGS{exec}->{validator};
+
+$ARGS{ok}->{validator} = sub {
+    return "need at least a command name" unless $#_>1;
+    return undef;
+};
+
+$ARGS{okdir}->{validator} = $ARGS{ok}->{validator};
+
+# }}}1
 # === Accessors for argument information === {{{1
 
 =head2 ARGTEST

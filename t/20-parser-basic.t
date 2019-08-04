@@ -11,34 +11,34 @@ my $p = \&App::GitFind::cmdline::Parse;
 my $ok=List::AutoNumbered->new(__LINE__);
 $ok->load([qw(-u)], {switches=>{u=>[true]},sawnpa=>false})->    # switch
     ([qw(master)], {revs=>['master'],sawnpa=>false})          # ref
-    ([qw(-empty)], {expr=>'empty',sawnpa=>false})             # test
-    ([qw(-print)], {expr=>'print',sawnpa=>true})             # action
+    ([qw(-empty)], {expr=>{name=>'empty'},sawnpa=>false})             # test
+    ([qw(-print)], {expr=>{name=>'print'},sawnpa=>true})             # action
     ([qw(-u master)], {switches=>{u=>[true]}, revs=>['master'],sawnpa=>false})   # switch + ref
     # switch + ref + test
-    (LSKIP 1, [qw(-u master -empty)], {switches=>{u=>[true]}, revs=>['master'], expr=>'empty',sawnpa=>false})
+    (LSKIP 1, [qw(-u master -empty)], {switches=>{u=>[true]}, revs=>['master'], expr=>{name=>'empty'},sawnpa=>false})
     # switch + ref + action
-    (LSKIP 1, [qw(-u master -print)], {switches=>{u=>[true]}, revs=>['master'], expr=>'print',sawnpa=>true})
+    (LSKIP 1, [qw(-u master -print)], {switches=>{u=>[true]}, revs=>['master'], expr=>{name=>'print'},sawnpa=>true})
     # switch + ref + test + action
-    (LSKIP 1, [qw(-u master -empty -print)], {switches=>{u=>[true]}, revs=>['master'], expr=>{AND=>['empty', 'print']},sawnpa=>true})
+    (LSKIP 1, [qw(-u master -empty -print)], {switches=>{u=>[true]}, revs=>['master'], expr=>{AND=>[{name=>'empty'}, {name=>'print'}]},sawnpa=>true})
     # Then the same, but with --
     (LSKIP 1, [qw(-u --)], {switches=>{u=>[true]},sawnpa=>false})   # switch
     ([qw(master --)], {revs=>['master'],sawnpa=>false})           # ref
-    ([qw(-- -empty)], {expr=>'empty',sawnpa=>false})              # test
-    ([qw(-- -print)], {expr=>'print',sawnpa=>true})              # action
+    ([qw(-- -empty)], {expr=>{name=>'empty'},sawnpa=>false})              # test
+    ([qw(-- -print)], {expr=>{name=>'print'},sawnpa=>true})              # action
     # switch + ref
     (LSKIP 1, [qw(-u master --)], {switches=>{u=>[true]}, revs=>['master'],sawnpa=>false})
     # switch + ref + test
-    (LSKIP 1, [qw(-u master -- -empty)], {switches=>{u=>[true]}, revs=>['master'], expr=>'empty',sawnpa=>false})
+    (LSKIP 1, [qw(-u master -- -empty)], {switches=>{u=>[true]}, revs=>['master'], expr=>{name=>'empty'},sawnpa=>false})
     # switch + ref + action
-    (LSKIP 1, [qw(-u master -- -print)], {switches=>{u=>[true]}, revs=>['master'], expr=>'print',sawnpa=>true})
+    (LSKIP 1, [qw(-u master -- -print)], {switches=>{u=>[true]}, revs=>['master'], expr=>{name=>'print'},sawnpa=>true})
     # switch + ref + test + action
-    (LSKIP 1, [qw(-u master -- -empty -print)], {switches=>{u=>[true]}, revs=>['master'], expr=>{AND=>['empty', 'print']},sawnpa=>true})
+    (LSKIP 1, [qw(-u master -- -empty -print)], {switches=>{u=>[true]}, revs=>['master'], expr=>{AND=>[{name=>'empty'}, {name=>'print'}]},sawnpa=>true})
 ;
 
 # More complicated tests
-$ok->load(LSKIP 3, [qw(-empty -o -readable -true)], {expr=>{OR=>['empty', {AND=>['readable','true']}]},sawnpa=>false})->
-    (['-executable', ',', '-readable'], {expr=>{SEQ=>[qw(executable readable)]},sawnpa=>false})
-    (['-executable', ',', '-readable', '-empty'], {expr=>{SEQ=>['executable',{AND=>[qw(readable empty)]}]},sawnpa=>false})
+$ok->load(LSKIP 3, [qw(-empty -o -readable -true)], {expr=>{OR=>[{name=>'empty'}, {AND=>[{name=>'readable'},{name=>'true'}]}]},sawnpa=>false})->
+    (['-executable', ',', '-readable'], {expr=>{SEQ=>[{name=>'executable'}, {name=>'readable'}]},sawnpa=>false})
+    (['-executable', ',', '-readable', '-empty'], {expr=>{SEQ=>[{name=>'executable'},{AND=>[{name=>'readable'},{name=>'empty'}]}]},sawnpa=>false})
 ;
 
 foreach(@{$ok->arr}) {

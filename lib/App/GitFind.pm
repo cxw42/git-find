@@ -4,12 +4,16 @@ use 5.010;
 use strict;
 use warnings;
 
+use parent 'App::GitFind::Class';
+use Class::Tiny qw(argv _expr _revs _repo _repotop);
+
 use App::GitFind::Base;
 use App::GitFind::cmdline;
 use App::GitFind::Runner;
 use Getopt::Long 2.34 ();
 use Git::Raw;
 use Iterator::Simple;
+use List::SomeUtils;    # uniq
 use Path::Class;
 
 our $VERSION = '0.000001';  # TRIAL
@@ -34,41 +38,48 @@ from Perl code:
 
 # }}}1
 
-=head2 new
+=head2 BUILD
 
-The constructor.  Takes an arrayref of arguments, e.g., C<\@ARGV>.  May
-C<exit()>, e.g., on C<--help>.
+Process the arguments.  Usage:
+
+    my $gf = App::GitFind->new(-argv => \@ARGV);
+
+May modify the provided array.  May C<exit()>, e.g., on C<--help>.
 
 =cut
 
-sub new {
-    my ($package, $lrArgv) = @_;
-    my $self = _process_options($lrArgv);
+sub BUILD {
+    my ($self, $hrArgs) = @_;
+    croak "Need a -argv arrayref" unless ref $hrArgs->{argv} eq 'ARRAY';
+    my $details = _process_options($hrArgs->{argv});
 
     # Handle default -print
-    if(!$self->{expr}) {            # Default: -print
-        $self->{expr} = 'print';
+    if(!$details->{expr}) {             # Default: -print
+        $details->{expr} = 'print';
 
-    } elsif(!$self->{sawnpa}) {     # With an expr: -print unless an action
-                                    # other than -prune was given
-        $self->{expr} = +{
-            AND => [ $self->{expr}, 'print' ]
+    } elsif(!$details->{sawnpa}) {      # With an expr: -print unless an action
+                                        # other than -prune was given
+        $details->{expr} = +{
+            AND => [ $details->{expr}, 'print' ]
         };
     }
 
     # Add default for missing revs
-    $self->{revs} = [undef] unless $self->{revs};
+    $details->{revs} = [undef] unless $details->{revs};
 
-    print "Options: ", ddc $self if $TRACE>1;
+    print "Options: ", ddc $details if $TRACE>1;
+
+    # Copy information into our instance fields
+    $self->_expr($details->{expr});
+    $self->_revs($details->{revs});
 
     # find the repo we're in
-    $self->{repo} = eval { Git::Raw::Repository->discover('.'); };
+    $self->_repo( eval { Git::Raw::Repository->discover('.'); } );
     die "Not in a Git repository: $@\n" if $@;
-    $self->{repotop} = dir($self->{repo}->commondir)->parent;
-    say "Repo in ", $self->{repo}->commondir if $TRACE;     # .git dir
 
-    bless $self, $package;
-} #new()
+    $self->_repotop( dir($self->_repo->commondir)->parent );    # .git/.. dir
+    say "Repo in ", $self->_repotop if $TRACE;
+} #BUILD()
 
 =head2 run
 
@@ -78,17 +89,17 @@ Does the work.  Call as C<< exit($obj->run()) >>.  Returns a shell exit code.
 
 sub run {
     my $self = shift;
-    my $runner = App::GitFind::Runner->new(-expr => $self->{expr});
+    my $runner = App::GitFind::Runner->new(-expr => $self->_expr);
 
     my $iter = $self->_entry_iterator;
 
     while (defined(my $entry = $iter->next)) {
         print "$entry: " if $TRACE;
-        my $ok = $runner->process($entry);
-        print $ok ? 'passed' : 'failed', "\n" if $TRACE;
+        my $matched = $runner->process($entry);
+        print $matched ? 'matched' : 'did not match', "\n" if $TRACE >= 3;
     }
 
-    return 0;   # TODO return 1 if anything failed.
+    return 0;   # TODO? return 1 if any -exec failed?
 } #run()
 
 =head1 INTERNALS
@@ -104,7 +115,8 @@ sub _entry_iterator {
     my $self = shift;
 
     return Iterator::Simple::ichain(
-        map { $self->_iterator_for($_) } @{$self->{revs}}
+        map { $self->_iterator_for($_) }
+            List::SomeUtils::uniq @{$self->_revs}
     );
 
 } #_entry_iterator
@@ -117,18 +129,23 @@ Return an iterator for a particular rev.
 
 sub _iterator_for {
     my ($self, $rev) = @_;
-    # TODO find files in scope $self->{revs}, repo $self->{repo}
+    # TODO find files in scope $self->_revs, repo $self->_repo
 
     if(!defined $rev) {     # The index of the current repo
         return Iterator::Simple::iter(['./TEST!!']);    # DEBUG
 
     } elsif($rev eq ']]') { # The current working directory
-        require File::Next;
-        return File::Next::everything($self->{repotop}->relative);
+        require File::Find::Object;
+        return File::Find::Object->new({followlink=>true},
+            $self->_repotop->relative);
+            # TODO wrap this in an Entry for consistency in permitting
+            # pruning independently of the type of iterator.
+
+            # Later items:
             # TODO add an option to report absolute paths instead of relative
             # TODO skip .git and .gitignored files unless -u
-            # TODO optimization: if -type f or -type d is at the top level,
-            #       use File::Next::files() or dirs() respectively.
+            # TODO optimization: if possible, add a filter function
+            #       (e.g., for a top-level -type filter)
 
     } else {
         die "I don't yet know how to search through rev $_";

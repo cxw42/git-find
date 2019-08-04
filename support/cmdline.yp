@@ -327,13 +327,35 @@ sub _consume_expression_element {
         unless($opts{nparam}>0) {
             #say STDERR "#   - No parameters";
             shift @$lrArgv;
-            return ($opts{token} => $arg)
+            return ($opts{token} => { name => $arg })
         }
 
-        # Consume additional arguments
+        # Consume additional arguments up to a regexp
+        if(ref $opts{nparam} eq 'Regexp') {
+            #say STDERR "#   - parameters until $opts{nparam}";
+            die "Need argument(s) for --$arg" if @$lrArgv == 1;
+            my $lastarg;
+            say STDERR "Args: ", join ' : ', @$lrArgv;
+            for(1..$#$lrArgv) {
+                $lastarg=$_, last if $lrArgv->[$_] =~ $opts{nparam};
+            }
+            die "--$arg needs an argument terminator matching $opts{nparam}"
+                unless defined $lastarg;
+
+            # Set up to fall through to the numeric-params case
+            $opts{nparam} = $lastarg;
+        }
+
+        # Consume additional positional arguments
         #say STDERR "#   - $opts{nparam} parameters";
         die "Not enough parameters after --$arg (need $opts{nparam})"
             unless @$lrArgv >= ($opts{nparam}+1);   # +1 for $arg itself
+
+        # Custom argument validation
+        if($opts{validator}) {
+            my $errmsg = $opts{validator}->(@{$lrArgv}[0..$opts{nparam}]);
+            die "--$arg argument error: $errmsg" if defined($errmsg);
+        }
 
         @retval = ($opts{token} => {
                         name => $arg,

@@ -40,7 +40,7 @@ DESCRIPTION
         Show full help (equivalent to "man git-find")
 
     -u  Unrestricted search.  Normally, git-find does not search ignored
-        files.  When this option is given, it does search those files. 
+        files.  When this option is given, it does search those files.
         However, it still skips ".git/" directories.
 
     -v  Increase verbosity.  May be given multiple times.
@@ -90,10 +90,10 @@ DESCRIPTION
         equivalent to C<-o> when separating refs.
 
   Expression
-    The expression includes one or more elements separated by "Operators". 
+    The expression includes one or more elements separated by "Operators".
     Elements can be options, tests, or operators.
 
-    Elements of expressions can be specified in a form similar to find(1). 
+    Elements of expressions can be specified in a form similar to find(1).
     Long elements (e.g., "-name") can start with a single or a double dash.
 
     Tests are of two types:
@@ -178,4 +178,3 @@ LICENSE AND COPYRIGHT
     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
     DEALINGS IN THE SOFTWARE.
-

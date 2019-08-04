@@ -193,7 +193,7 @@ my %opts = (
     },
     PREREQ_PM => {
         #'Class::Method::Modifiers' => '2.10',   # most recent code change
-        #'Class::Tiny' => '1.000',   # New API.  NOTE: <1.001 has no BUILDARGS
+        'Class::Tiny' => '1.001',   # BUILDARGS
 
         #'Class::Tiny::ConstrainedAccessor' => '0.000010',   # custom constraints
 
@@ -206,10 +206,11 @@ my %opts = (
         #'Exporter' => '0',
         'Fcntl' => '0',
         #'feature' => '0',
+        'File::Find::Object' => '0.3.1',
         # 'File::Find::Rule' => '0',    # - might be nice for finding files
         #'File::Glob' => '0',
         #'File::Globstar' => '0.5',      # Fewer dependencies
-        'File::Next' => '1.16',
+        #'File::Next' => '1.16',
         #'File::Path::Tiny' => '0.9',
         #'File::pushd' => '1.013',
         #'File::Spec' => '0',
@@ -223,6 +224,7 @@ my %opts = (
         #'Import::Into' => '0',
         'Iterator::Simple' => '0.07',
 
+        'List::SomeUtils' => '0.50',
         'Math::Cartesian::Product' => '1.009',
 
         # 'Module::Find' => '0.12', # For bugfixes

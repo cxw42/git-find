@@ -78,221 +78,231 @@ sub new {
 [
 	{#State 0
 		ACTIONS => {
-			'NOT' => 7,
 			'REV' => 4,
-			'LPAREN' => 1,
-			'ACTION' => 3,
-			'SWITCH' => 6,
-			'TEST' => 5
+			'TEST' => 2,
+			'NOT' => 3,
+			'ACTION' => 8,
+			'LPAREN' => 10,
+			'SWITCH' => 1
 		},
 		DEFAULT => -1,
 		GOTOS => {
-			'cmdline' => 2,
+			'cmdline' => 5,
 			'expr' => 9,
-			'switches_and_revs' => 8,
-			'element' => 10
+			'element' => 7,
+			'switches_and_revs' => 6
 		}
 	},
 	{#State 1
-		ACTIONS => {
-			'LPAREN' => 1,
-			'ACTION' => 3,
-			'NOT' => 7,
-			'TEST' => 5
-		},
-		GOTOS => {
-			'element' => 10,
-			'expr' => 11
-		}
+		DEFAULT => -4
 	},
 	{#State 2
-		ACTIONS => {
-			'' => 12
-		}
+		DEFAULT => -21
 	},
 	{#State 3
-		DEFAULT => -22
+		ACTIONS => {
+			'expr4' => 11
+		}
 	},
 	{#State 4
 		DEFAULT => -5
 	},
 	{#State 5
-		DEFAULT => -21
-	},
-	{#State 6
-		DEFAULT => -4
-	},
-	{#State 7
 		ACTIONS => {
-			'expr4' => 13
+			'' => 12
 		}
 	},
-	{#State 8
+	{#State 6
 		ACTIONS => {
-			'TEST' => 5,
-			'SWITCH' => 14,
-			'LPAREN' => 1,
-			'ACTION' => 3,
-			'REV' => 15,
-			'NOT' => 7
+			'SWITCH' => 16,
+			'LPAREN' => 10,
+			'ACTION' => 8,
+			'REV' => 13,
+			'NOT' => 3,
+			'TEST' => 2
 		},
 		DEFAULT => -8,
 		GOTOS => {
-			'maybeexprplus' => 16,
-			'expr' => 17,
-			'element' => 10
+			'expr' => 15,
+			'element' => 7,
+			'maybeexprplus' => 14
 		}
+	},
+	{#State 7
+		DEFAULT => -11
+	},
+	{#State 8
+		DEFAULT => -22
 	},
 	{#State 9
 		ACTIONS => {
-			'COMMA' => 23,
-			'LPAREN' => 24,
-			'ACTION' => 3,
-			'AND' => 22,
-			'TEST' => 5,
-			'NOT' => 21,
-			'OR' => 19
+			'LPAREN' => 20,
+			'ACTION' => 8,
+			'COMMA' => 21,
+			'AND' => 17,
+			'NOT' => 19,
+			'OR' => 18,
+			'TEST' => 2
 		},
 		DEFAULT => -2,
 		GOTOS => {
-			'element' => 20,
-			'subsequent_expr' => 18
+			'element' => 22,
+			'subsequent_expr' => 23
 		}
 	},
 	{#State 10
-		DEFAULT => -11
-	},
-	{#State 11
 		ACTIONS => {
-			'OR' => 19,
-			'RPAREN' => 25,
-			'NOT' => 21,
-			'AND' => 22,
-			'TEST' => 5,
-			'LPAREN' => 24,
-			'COMMA' => 23,
-			'ACTION' => 3
+			'LPAREN' => 10,
+			'ACTION' => 8,
+			'NOT' => 3,
+			'TEST' => 2
 		},
 		GOTOS => {
-			'subsequent_expr' => 18,
-			'element' => 20
+			'element' => 7,
+			'expr' => 24
 		}
+	},
+	{#State 11
+		DEFAULT => -16
 	},
 	{#State 12
 		DEFAULT => 0
 	},
 	{#State 13
-		DEFAULT => -16
-	},
-	{#State 14
-		DEFAULT => -6
-	},
-	{#State 15
 		DEFAULT => -7
 	},
-	{#State 16
+	{#State 14
 		DEFAULT => -3
 	},
-	{#State 17
+	{#State 15
 		ACTIONS => {
+			'LPAREN' => 20,
+			'ACTION' => 8,
+			'COMMA' => 21,
+			'NOT' => 19,
+			'OR' => 18,
+			'TEST' => 2,
+			'AND' => 17,
 			'REV' => 4,
-			'LPAREN' => 24,
-			'COMMA' => 23,
-			'ACTION' => 3,
-			'SWITCH' => 6,
-			'AND' => 22,
-			'TEST' => 5,
-			'NOT' => 21,
-			'OR' => 19
+			'SWITCH' => 1
 		},
 		DEFAULT => -9,
 		GOTOS => {
-			'subsequent_expr' => 18,
-			'element' => 20,
-			'switches_and_revs' => 26
+			'element' => 22,
+			'switches_and_revs' => 25,
+			'subsequent_expr' => 23
+		}
+	},
+	{#State 16
+		DEFAULT => -6
+	},
+	{#State 17
+		ACTIONS => {
+			'NOT' => 3,
+			'TEST' => 2,
+			'LPAREN' => 10,
+			'ACTION' => 8
+		},
+		GOTOS => {
+			'element' => 7,
+			'expr' => 26
 		}
 	},
 	{#State 18
-		DEFAULT => -14
-	},
-	{#State 19
 		ACTIONS => {
-			'TEST' => 5,
-			'NOT' => 7,
-			'ACTION' => 3,
-			'LPAREN' => 1
+			'ACTION' => 8,
+			'LPAREN' => 10,
+			'TEST' => 2,
+			'NOT' => 3
 		},
 		GOTOS => {
 			'expr' => 27,
-			'element' => 10
+			'element' => 7
 		}
 	},
-	{#State 20
-		DEFAULT => -18
-	},
-	{#State 21
+	{#State 19
 		ACTIONS => {
 			'expr4' => 28
 		}
 	},
-	{#State 22
+	{#State 20
 		ACTIONS => {
-			'TEST' => 5,
-			'NOT' => 7,
-			'ACTION' => 3,
-			'LPAREN' => 1
+			'TEST' => 2,
+			'NOT' => 3,
+			'ACTION' => 8,
+			'LPAREN' => 10
 		},
 		GOTOS => {
 			'expr' => 29,
-			'element' => 10
+			'element' => 7
 		}
 	},
-	{#State 23
+	{#State 21
 		ACTIONS => {
-			'TEST' => 5,
-			'NOT' => 7,
-			'ACTION' => 3,
-			'LPAREN' => 1
+			'ACTION' => 8,
+			'LPAREN' => 10,
+			'TEST' => 2,
+			'NOT' => 3
 		},
 		GOTOS => {
-			'element' => 10,
-			'expr' => 30
+			'expr' => 30,
+			'element' => 7
 		}
+	},
+	{#State 22
+		DEFAULT => -18
+	},
+	{#State 23
+		DEFAULT => -14
 	},
 	{#State 24
 		ACTIONS => {
-			'TEST' => 5,
-			'NOT' => 7,
-			'ACTION' => 3,
-			'LPAREN' => 1
+			'OR' => 18,
+			'NOT' => 19,
+			'TEST' => 2,
+			'AND' => 17,
+			'RPAREN' => 31,
+			'LPAREN' => 20,
+			'COMMA' => 21,
+			'ACTION' => 8
 		},
 		GOTOS => {
-			'element' => 10,
-			'expr' => 31
+			'element' => 22,
+			'subsequent_expr' => 23
 		}
 	},
 	{#State 25
-		DEFAULT => -17
-	},
-	{#State 26
 		ACTIONS => {
-			'REV' => 15,
-			'SWITCH' => 14
+			'SWITCH' => 16,
+			'REV' => 13
 		},
 		DEFAULT => -10
 	},
+	{#State 26
+		ACTIONS => {
+			'ACTION' => 8,
+			'LPAREN' => 20,
+			'TEST' => 2,
+			'NOT' => 19
+		},
+		DEFAULT => -15,
+		GOTOS => {
+			'subsequent_expr' => 23,
+			'element' => 22
+		}
+	},
 	{#State 27
 		ACTIONS => {
-			'NOT' => 21,
-			'LPAREN' => 24,
-			'ACTION' => 3,
-			'AND' => 22,
-			'TEST' => 5
+			'LPAREN' => 20,
+			'ACTION' => 8,
+			'NOT' => 19,
+			'TEST' => 2,
+			'AND' => 17
 		},
 		DEFAULT => -13,
 		GOTOS => {
-			'subsequent_expr' => 18,
-			'element' => 20
+			'subsequent_expr' => 23,
+			'element' => 22
 		}
 	},
 	{#State 28
@@ -300,47 +310,37 @@ sub new {
 	},
 	{#State 29
 		ACTIONS => {
-			'NOT' => 21,
-			'LPAREN' => 24,
-			'ACTION' => 3,
-			'TEST' => 5
+			'TEST' => 2,
+			'NOT' => 19,
+			'OR' => 18,
+			'AND' => 17,
+			'RPAREN' => 32,
+			'ACTION' => 8,
+			'COMMA' => 21,
+			'LPAREN' => 20
 		},
-		DEFAULT => -15,
 		GOTOS => {
-			'element' => 20,
-			'subsequent_expr' => 18
+			'element' => 22,
+			'subsequent_expr' => 23
 		}
 	},
 	{#State 30
 		ACTIONS => {
-			'LPAREN' => 24,
-			'ACTION' => 3,
-			'AND' => 22,
-			'TEST' => 5,
-			'NOT' => 21,
-			'OR' => 19
+			'AND' => 17,
+			'TEST' => 2,
+			'OR' => 18,
+			'NOT' => 19,
+			'ACTION' => 8,
+			'LPAREN' => 20
 		},
 		DEFAULT => -12,
 		GOTOS => {
-			'subsequent_expr' => 18,
-			'element' => 20
+			'subsequent_expr' => 23,
+			'element' => 22
 		}
 	},
 	{#State 31
-		ACTIONS => {
-			'ACTION' => 3,
-			'LPAREN' => 24,
-			'COMMA' => 23,
-			'TEST' => 5,
-			'AND' => 22,
-			'NOT' => 21,
-			'RPAREN' => 32,
-			'OR' => 19
-		},
-		GOTOS => {
-			'element' => 20,
-			'subsequent_expr' => 18
-		}
+		DEFAULT => -17
 	},
 	{#State 32
 		DEFAULT => -20
@@ -659,13 +659,35 @@ sub _consume_expression_element {
         unless($opts{nparam}>0) {
             #say STDERR "#   - No parameters";
             shift @$lrArgv;
-            return ($opts{token} => $arg)
+            return ($opts{token} => { name => $arg })
         }
 
-        # Consume additional arguments
+        # Consume additional arguments up to a regexp
+        if(ref $opts{nparam} eq 'Regexp') {
+            #say STDERR "#   - parameters until $opts{nparam}";
+            die "Need argument(s) for --$arg" if @$lrArgv == 1;
+            my $lastarg;
+            say STDERR "Args: ", join ' : ', @$lrArgv;
+            for(1..$#$lrArgv) {
+                $lastarg=$_, last if $lrArgv->[$_] =~ $opts{nparam};
+            }
+            die "--$arg needs an argument terminator matching $opts{nparam}"
+                unless defined $lastarg;
+
+            # Set up to fall through to the numeric-params case
+            $opts{nparam} = $lastarg;
+        }
+
+        # Consume additional positional arguments
         #say STDERR "#   - $opts{nparam} parameters";
         die "Not enough parameters after --$arg (need $opts{nparam})"
             unless @$lrArgv >= ($opts{nparam}+1);   # +1 for $arg itself
+
+        # Custom argument validation
+        if($opts{validator}) {
+            my $errmsg = $opts{validator}->(@{$lrArgv}[0..$opts{nparam}]);
+            die "--$arg argument error: $errmsg" if defined($errmsg);
+        }
 
         @retval = ($opts{token} => {
                         name => $arg,

@@ -6,6 +6,7 @@ lib/App/GitFind/Class.pm
 lib/App/GitFind/cmdline.pm
 lib/App/GitFind/FileStatLs.pm
 lib/App/GitFind/Runner.pm
+LICENSE
 Makefile.PL
 MANIFEST			This list of files
 MANIFEST.SKIP

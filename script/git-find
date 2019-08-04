@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use App::GitFind;
 our $VERSION = $App::GitFind::VERSION;  # for Getopt::Long auto_version
-exit App::GitFind->new(\@ARGV)->run;
+exit App::GitFind->new(-argv => \@ARGV)->run;
 __END__
 
 # === Documentation === {{{1
