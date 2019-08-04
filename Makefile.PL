@@ -114,11 +114,11 @@ README: $SCRIPT Makefile.PL $make_readme_md
 # not trigger shell interpolation.  Double-quotes only, for compatibility
 # with cmd, and no embedded double quotes (q() or qq() instead).
 
-git-find.packed.pl: $VERSION_FROM $SCRIPT Makefile.PL $CMDLINE_TO
-\t"$secure_perl_path" -Ilib -MApp::FatPacker -MConfig -e "eval q(\$\$) . q(ENV{PERL5LIB}=join \$\$) . q(Config{path_sep}, \@INC;); App::FatPacker->new->run_script([q(pack), q($SCRIPT)])" > "\$@"
+#git-find.packed.pl: $VERSION_FROM $SCRIPT Makefile.PL $CMDLINE_TO
+#\t"$secure_perl_path" -Ilib -MApp::FatPacker -MConfig -e "eval q(\$\$) . q(ENV{PERL5LIB}=join \$\$) . q(Config{path_sep}, \@INC;); App::FatPacker->new->run_script([q(pack), q($SCRIPT)])" > "\$@"
 
-all :: README.md README git-find.packed.pl
-dist :: README.md README git-find.packed.pl
+all :: README.md README #git-find.packed.pl
+dist :: README.md README #git-find.packed.pl
 
 # Uninstallation: mimic what the normal "uninstall" target does, but actually
 # carry out the actions.
@@ -166,7 +166,7 @@ my %opts = (
         'warnings' => '0',
     },
     BUILD_REQUIRES => {
-        'App::FatPacker' => '0.009016',
+        #'App::FatPacker' => '0.009016',
         'Getopt::Long' => '2.5',
         'Parse::Yapp' => '0',
         'Path::Class' => '0.37',
