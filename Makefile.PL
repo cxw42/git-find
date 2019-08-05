@@ -189,6 +189,7 @@ my %opts = (
         #'Test::Exception' => '0',
         'Test::More' => '0',
         # Test::TempDir::Tiny?  If so, remove Test::Directory dependency?
+        'Test::UseAllModules' => '0.03',
         #'Test::Warn' => '0.35',     # for metadata
     },
     PREREQ_PM => {

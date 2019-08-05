@@ -177,15 +177,15 @@ sub do_true { true }
 # writeable
 
 # }}}2
-# No-argument actions {{{ 2
+# No-argument actions {{{2
 
 # delete
 
-sub do_ls { print App::GitFind::FileStatLs::ls_stat($_[1]); true } # $_[0]=self
+sub do_ls { print App::GitFind::FileStatLs::ls_stat($_[1]->path); true } # $_[0]=self
 
-sub do_print { say $_[1]; true }        # $_[0] = self
+sub do_print { say $_[1]->path; true }        # $_[0] = self
 
-sub do_print0 { print $_[1], "\0"; true }    # $_[0] = self
+sub do_print0 { print $_[1]->path, "\0"; true }    # $_[0] = self
 
 # prune
 

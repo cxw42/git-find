@@ -4,9 +4,9 @@ package App::GitFind::Class;
 use 5.010;
 use strict;
 use warnings;
-use Carp qw(croak);
+use App::GitFind::Base;
 
-our $VERSION = '0.000016'; # TRIAL
+our $VERSION = '0.000001'; # TRIAL
 
 # No parent, so Class::Tiny will become the parent
 use Class::Tiny;
@@ -15,7 +15,7 @@ use Class::Tiny;
 
 =head1 NAME
 
-App::GitFind::Class - Class::Tiny base class supporting C<< new(-arg => value) >>
+App::GitFind::Class - Class::Tiny base class supporting new(-arg => value)
 
 =head1 SYNOPSIS
 

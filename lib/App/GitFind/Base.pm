@@ -8,7 +8,7 @@ our $VERSION = '0.000001';
 
 use parent 'Exporter';
 use vars::i '$TRACE' => 0;
-use vars::i '@EXPORT' => qw(*TRACE true false);
+use vars::i '@EXPORT' => qw(*TRACE true false _qwc);
 
 use Import::Into;
 
@@ -43,6 +43,27 @@ Set to a positive integer to enable tracing.
 =cut
 
 # }}}1
+
+=head2 _qwc
+
+qw(), but permitting comments.  Call as C<< _qwc(<<EOT) >>.  Thanks to ideas at
+https://www.perlmonks.org/?node=qw%20comments .  Prototyped as C<($)>.
+
+Has a leading underscore because for some reason that makes my syntax files
+happier!
+
+=cut
+
+sub _qwc ($) {
+    my @retval;
+    for(split "\n", $_[0]//'') {
+        chomp;
+        s{#.*$}{};                      # Remove comments
+        s{(?:^\s+)|(?:\s+$)}{}g;        # Remove leading/trailing ws
+        push @retval, grep { length } split /\s+/;
+    }
+    return @retval;
+} #_qwc()
 
 =head2 import
 

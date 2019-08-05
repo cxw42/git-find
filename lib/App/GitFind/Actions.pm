@@ -10,10 +10,8 @@ use parent 'Exporter';
 use vars::i '@EXPORT_OK' => qw(ARGTEST argdetails);
 use vars::i '%EXPORT_TAGS' => { all => [@EXPORT_OK] };
 
-use constant true => !!1;
-use constant false => !!0;
-
 # Imports
+use App::GitFind::Base;
 use Math::Cartesian::Product;
 
 # === Documentation === {{{1
@@ -36,19 +34,6 @@ TODO
 # Helpers for defining these
 sub _a { ($_[0] => { token => 'ACTION', nparam => ($_[1]||0) }) }
 sub _t { ($_[0] => { token => 'TEST', nparam => ($_[1]||0), index => ($_[2]||false) }) }
-
-# qw(), but permitting comments.  Call as _qwc(<<EOT).  Thanks to ideas at
-# https://www.perlmonks.org/?node=qw%20comments .
-sub _qwc ($) {
-    my @retval;
-    for(split "\n", $_[0]//'') {
-        chomp;
-        s{#.*$}{};                      # Remove comments
-        s{(?:^\s+)|(?:\s+$)}{}g;        # Remove leading/trailing ws
-        push @retval, grep { length } split /\s+/;
-    }
-    return @retval;
-} #_qwc()
 
 # A map from argument name to a details hashref.  Valid keys in the hashref are:
 #   token:  The token type

@@ -9,10 +9,12 @@ use Class::Tiny qw(argv _expr _revs _repo _repotop);
 
 use App::GitFind::Base;
 use App::GitFind::cmdline;
+use App::GitFind::Entry::OnDisk;
+use App::GitFind::Entry::Phony;     # DEBUG
 use App::GitFind::Runner;
 use Getopt::Long 2.34 ();
 use Git::Raw;
-use Iterator::Simple;
+use Iterator::Simple qw(ichain imap iter iterator);
 use List::SomeUtils;    # uniq
 use Path::Class;
 
@@ -55,12 +57,12 @@ sub BUILD {
 
     # Handle default -print
     if(!$details->{expr}) {             # Default: -print
-        $details->{expr} = 'print';
+        $details->{expr} = { name => 'print' };
 
     } elsif(!$details->{sawnpa}) {      # With an expr: -print unless an action
                                         # other than -prune was given
         $details->{expr} = +{
-            AND => [ $details->{expr}, 'print' ]
+            AND => [ $details->{expr}, { name => 'print' } ]
         };
     }
 
@@ -94,7 +96,7 @@ sub run {
     my $iter = $self->_entry_iterator;
 
     while (defined(my $entry = $iter->next)) {
-        print "$entry: " if $TRACE;
+        print $entry->path, ': ' if $TRACE;
         my $matched = $runner->process($entry);
         print $matched ? 'matched' : 'did not match', "\n" if $TRACE >= 3;
     }
@@ -114,7 +116,7 @@ L<Iterator::Simple>.
 sub _entry_iterator {
     my $self = shift;
 
-    return Iterator::Simple::ichain(
+    return ichain(
         map { $self->_iterator_for($_) }
             List::SomeUtils::uniq @{$self->_revs}
     );
@@ -132,14 +134,19 @@ sub _iterator_for {
     # TODO find files in scope $self->_revs, repo $self->_repo
 
     if(!defined $rev) {     # The index of the current repo
-        return Iterator::Simple::iter(['./TEST!!']);    # DEBUG
+        # DEBUG
+        return iter([
+            App::GitFind::Entry::Phony->new(-obj=>file('./TEST!!'))
+        ]);
 
     } elsif($rev eq ']]') { # The current working directory
         require File::Find::Object;
-        return File::Find::Object->new({followlink=>true},
-            $self->_repotop->relative);
-            # TODO wrap this in an Entry for consistency in permitting
-            # pruning independently of the type of iterator.
+        my $base_iter = File::Find::Object->new({followlink=>true},
+                                                $self->_repotop->relative);
+        return imap { App::GitFind::Entry::OnDisk->new(-obj=>$_) }
+                iterator { $base_iter->next_obj };
+                # Separate iterator and imap so imap won't be called once
+                # next_obj returns undef.
 
             # Later items:
             # TODO add an option to report absolute paths instead of relative
