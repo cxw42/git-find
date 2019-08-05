@@ -10,7 +10,7 @@ use Class::Tiny qw(argv _expr _revs _repo _repotop);
 use App::GitFind::Base;
 use App::GitFind::cmdline;
 use App::GitFind::Entry::OnDisk;
-use App::GitFind::Entry::Phony;     # DEBUG
+use App::GitFind::Entry::PathClass;     # DEBUG
 use App::GitFind::Runner;
 use Getopt::Long 2.34 ();
 use Git::Raw;
@@ -136,7 +136,7 @@ sub _iterator_for {
     if(!defined $rev) {     # The index of the current repo
         # DEBUG
         return iter([
-            App::GitFind::Entry::Phony->new(-obj=>file('./TEST!!'))
+            App::GitFind::Entry::PathClass->new(-obj=>file('./TEST!!'))
         ]);
 
     } elsif($rev eq ']]') { # The current working directory

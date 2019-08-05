@@ -182,6 +182,8 @@ sub do_true { true }
 # delete
 
 sub do_ls { print App::GitFind::FileStatLs::ls_stat($_[1]->path); true } # $_[0]=self
+    # TODO optimization?  Pull the stat() results from $_[1] rather than
+    # re-statting.  May not be an issue.
 
 sub do_print { say $_[1]->path; true }        # $_[0] = self
 

@@ -14,12 +14,6 @@ use parent 'App::GitFind::Entry';
 use Class::Tiny
     'obj',      # A File::Find::Object::Result instance.  Required.
     {
-        # The lstat() results for this entry.  lstat() rather than stat()
-        # because searches treat links as individual entries rather than
-        # as their referents.  (TODO global option?)
-        # This is a lazy initializer so we don't stat() if we don't have to.
-        '_stat' => sub { [lstat($_[0]->obj->path)] },
-
         isdir => sub { $_[0]->obj->is_dir },
         name => sub {   # basename, whether it's a file or directory
             my @x = $_[0]->obj->full_components;
@@ -28,19 +22,19 @@ use Class::Tiny
 
         path => sub { $_[0]->obj->path },
 
-        dev => sub { $_[0]->_stat->[0] },
-        ino => sub { $_[0]->_stat->[1] },
-        mode => sub { $_[0]->_stat->[2] },
-        nlink => sub { $_[0]->_stat->[3] },
-        uid => sub { $_[0]->_stat->[4] },
-        gid => sub { $_[0]->_stat->[5] },
-        rdev => sub { $_[0]->_stat->[6] },
-        size => sub { $_[0]->_stat->[7] },
-        atime => sub { $_[0]->_stat->[8] },
-        mtime => sub { $_[0]->_stat->[9] },
-        ctime  => sub { $_[0]->_stat->[10] },
-        blksize => sub { $_[0]->_stat->[11] },
-        blocks => sub { $_[0]->_stat->[12] },
+        dev => sub { $_[0]->obj->stat_ret()->[0] },
+        ino => sub { $_[0]->obj->stat_ret()->[1] },
+        mode => sub { $_[0]->obj->stat_ret()->[2] },
+        nlink => sub { $_[0]->obj->stat_ret()->[3] },
+        uid => sub { $_[0]->obj->stat_ret()->[4] },
+        gid => sub { $_[0]->obj->stat_ret()->[5] },
+        rdev => sub { $_[0]->obj->stat_ret()->[6] },
+        size => sub { $_[0]->obj->stat_ret()->[7] },
+        atime => sub { $_[0]->obj->stat_ret()->[8] },
+        mtime => sub { $_[0]->obj->stat_ret()->[9] },
+        ctime  => sub { $_[0]->obj->stat_ret()->[10] },
+        blksize => sub { $_[0]->obj->stat_ret()->[11] },
+        blocks => sub { $_[0]->obj->stat_ret()->[12] },
     };
 
 # Docs {{{1
@@ -87,7 +81,7 @@ sub BUILD {
     die "Usage: @{[__PACKAGE__]}->new(-obj=>...)"
         unless $self->obj;
     die "-obj must be a File::Find::Object::Result"
-        unless ref $self->obj eq 'File::Find::Object::Result';
+        unless $self->obj->DOES('File::Find::Object::Result');
 } #BUILD()
 
 1;
