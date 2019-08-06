@@ -55,7 +55,7 @@ sub _process {
     my $func;   # What will handle the expression
     my @arg;    # Args to $func
 
-    print "Processing ", ddc($expr) if $TRACE;
+    print "Processing ", ddc($expr) if $TRACE > 2;
 
     die "Invalid expression: " . ddc($expr) unless ref $expr eq 'HASH';
 

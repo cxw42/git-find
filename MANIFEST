@@ -5,6 +5,7 @@ lib/App/GitFind/Base.pm
 lib/App/GitFind/Class.pm
 lib/App/GitFind/cmdline.pm
 lib/App/GitFind/Entry.pm
+lib/App/GitFind/Entry/GitIndex.pm
 lib/App/GitFind/Entry/OnDisk.pm
 lib/App/GitFind/Entry/PathClass.pm
 lib/App/GitFind/FileStatLs.pm

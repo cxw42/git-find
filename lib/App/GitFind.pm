@@ -9,8 +9,6 @@ use Class::Tiny qw(argv _expr _revs _repo _repotop);
 
 use App::GitFind::Base;
 use App::GitFind::cmdline;
-use App::GitFind::Entry::OnDisk;
-use App::GitFind::Entry::PathClass;     # DEBUG
 use App::GitFind::Runner;
 use Getopt::Long 2.34 ();
 use Git::Raw;
@@ -75,11 +73,12 @@ sub BUILD {
     $self->_expr($details->{expr});
     $self->_revs($details->{revs});
 
-    # find the repo we're in
+    # Find the repo we're in.  If we're in a submodule, that will be the
+    # repo of that submodule.
     $self->_repo( eval { Git::Raw::Repository->discover('.'); } );
     die "Not in a Git repository: $@\n" if $@;
 
-    $self->_repotop( dir($self->_repo->commondir)->parent );    # .git/.. dir
+    $self->_repotop( dir($self->_repo->workdir) );  # $repo->path is .git/
     say "Repo in ", $self->_repotop if $TRACE;
 } #BUILD()
 
@@ -96,7 +95,7 @@ sub run {
     my $iter = $self->_entry_iterator;
 
     while (defined(my $entry = $iter->next)) {
-        print $entry->path, ': ' if $TRACE;
+        print $entry->path, ': ' if $TRACE > 1;
         my $matched = $runner->process($entry);
         print $matched ? 'matched' : 'did not match', "\n" if $TRACE >= 3;
     }
@@ -134,13 +133,20 @@ sub _iterator_for {
     # TODO find files in scope $self->_revs, repo $self->_repo
 
     if(!defined $rev) {     # The index of the current repo
-        # DEBUG
+        require App::GitFind::Entry::GitIndex;
+        my $index = $self->_repo->index;
+        return imap { App::GitFind::Entry::GitIndex->new(-obj=>$_) }
+                iter([$index->entries]);
+
+    } elsif($rev eq 'DEBUG') {   # DEBUG
+        require App::GitFind::Entry::PathClass;
         return iter([
             App::GitFind::Entry::PathClass->new(-obj=>file('./TEST!!'))
         ]);
 
     } elsif($rev eq ']]') { # The current working directory
         require File::Find::Object;
+        require App::GitFind::Entry::OnDisk;
         my $base_iter = File::Find::Object->new({followlink=>true},
                                                 $self->_repotop->relative);
         return imap { App::GitFind::Entry::OnDisk->new(-obj=>$_) }

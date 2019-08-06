@@ -3,11 +3,11 @@
 
 # SYNOPSIS
 
-    git find [SWITCHES] [REFS] [--] [EXPRESSION]
+    git find [SWITCHES] [REVS] [--] [EXPRESSION]
 
 This command searches for files satisfying the `EXPRESSION`, a la find(1),
 anywhere in a Git repo.  Unlike find(1), the search scope is the whole repo
-(for the `REFS` you specify) regardless of the current directory.
+(for the `REVS` you specify) regardless of the current directory.
 
 For more help, run `git find --help` or `git find --man`.
 
@@ -22,9 +22,15 @@ Quick reference:
     Help (-?, --usage; -h, --help; --man); Version (-V, --version);
     Verbosity (-v); Warnings (-W).
 
-- Refs:
+- Revs:
 
-    Anything accepted by git-rev-parse(1)
+    Anything accepted by git-rev-parse(1).  Note that the rev `DEBUG` is
+    currently special-cased to a test item.  This special case will be
+    removed in the future.
+
+    A git **ref** (under `.git/refs/`) is also a **rev** in the sense of
+    git-rev-parse(1) and gitrevisions(7).  The terms "ref" and "rev" are used
+    interchangeably by `git-find`.
 
 - Expression:
 
@@ -69,7 +75,7 @@ not be interleaved in with the ["Expression"](#expression), if one is given.
 
 ## Operators
 
-In the ["Refs"](#refs) or ["Expression"](#expression), you can specify multiple items joined by
+In the ["Revs"](#revs) or ["Expression"](#expression), you can specify multiple items joined by
 logical operators.  They are listed below in order of descending precedence.
 Each operator must be separated by whitespace from any adjacent parameters.
 Operators short-circuit.
@@ -96,21 +102,21 @@ Operators short-circuit.
     Sequence: separates items to be evaluated separately.  The return value
     is that of the last item in the sequence.
 
-## Refs
+## Revs
 
 By default, git-find searches the current index (cache).  This is the same
 as the default for git-ls-files(1).
-You can specify one or more refs to search using any of the forms described
+You can specify one or more revs to search using any of the forms described
 in [gitrevisions(7)](https://git-scm.com/docs/gitrevisions).
 
 You can specify the special value `]]` (a double right bracket) to search
 the working tree that is currently checked out.
-(Mnemonic: search _right_ here.)  If you have an actual ref called "\]\]",
+(Mnemonic: search _right_ here.)  If you have an actual rev called "\]\]",
 git-find won't be able to help you.  Sorry!
 
-    TODO? You can specify multiple ranges of refs separated by C<-o> (or its
+    TODO? You can specify multiple ranges of revs separated by C<-o> (or its
     equivalent forms given in L</Operators>) or C<,>.  Comma is treated as
-    equivalent to C<-o> when separating refs.
+    equivalent to C<-o> when separating revs.
 
 ## Expression
 
@@ -139,9 +145,9 @@ Tests are of two types:
 - Detailed tests
 
     All tests other than index tests may require
-    checking out a worktree with one or more of the given refs.
+    checking out a worktree with one or more of the given revs.
     Therefore, they may be much slower than name-only tests.  However, if the only
-    ref given is `]]` (working directory), detailed tests can be executed without
+    rev given is `]]` (working directory), detailed tests can be executed without
     checking out a worktree, so the slowdown is not as bad.
 
 # DIFFERENCES FROM FIND(1)
