@@ -67,7 +67,7 @@ sub BUILD {
     # Add default for missing revs
     $details->{revs} = [undef] unless $details->{revs};
 
-    print "Options: ", ddc $details if $TRACE>1;
+    vlog { "Options:", ddc $details } 2;
 
     # Copy information into our instance fields
     $self->_expr($details->{expr});
@@ -79,7 +79,16 @@ sub BUILD {
     die "Not in a Git repository: $@\n" if $@;
 
     $self->_repotop( dir($self->_repo->workdir) );  # $repo->path is .git/
-    say "Repo in ", $self->_repotop if $TRACE;
+    vlog {
+        "Repository:", $self->_repo->path,
+        "\nWorking dir:", $self->_repotop
+    };
+
+    # Are we in a submodule?
+    if($self->_repo->path =~ m{\.git[\\\/]modules\b}) {
+        vlog { 'In a submodule' };
+        # TODO move outward to the parent
+    }
 } #BUILD()
 
 =head2 run
@@ -95,9 +104,9 @@ sub run {
     my $iter = $self->_entry_iterator;
 
     while (defined(my $entry = $iter->next)) {
-        print $entry->path, ': ' if $TRACE > 1;
+        vlog { $entry->path, '>>>' } 3;
         my $matched = $runner->process($entry);
-        print $matched ? 'matched' : 'did not match', "\n" if $TRACE >= 3;
+        vlog { '<<<', $matched ? 'matched' : 'did not match' } 3;
     }
 
     return 0;   # TODO? return 1 if any -exec failed?
@@ -181,7 +190,8 @@ sub _process_options {
     $hrOpts = App::GitFind::cmdline::Parse($lrArgv)
         or die 'Could not parse options successfully';
 
-    $TRACE = scalar @{$hrOpts->{switches}->{v} // []};
+    $VERBOSE = scalar @{$hrOpts->{switches}->{v} // []};
+    $QUIET = scalar @{$hrOpts->{switches}->{q} // []};
 
     Getopt::Long::HelpMessage(-exitval => 0, -verbose => 2) if have('man');
     Getopt::Long::HelpMessage(-exitval => 0, -verbose => 1)

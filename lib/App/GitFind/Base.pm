@@ -7,8 +7,8 @@ use warnings;
 our $VERSION = '0.000001';
 
 use parent 'Exporter';
-use vars::i '$TRACE' => 0;
-use vars::i '@EXPORT' => qw(*TRACE true false _qwc);
+use vars::i [ '$VERBOSE' => 0, '$QUIET' => 0 ];
+use vars::i '@EXPORT' => qw(*VERBOSE *QUIET true false _qwc vlog);
 
 use Import::Into;
 
@@ -30,13 +30,20 @@ App::GitFind::Base - base definitions for App::GitFind
     use App::GitFind::Base;
 
 Imports L<Carp>, L<Data::Dumper::Compact> (with the C<ddc> option), and
-local symbols C<true>, C<false>, and C<$TRACE>.
+local symbols C<true>, C<false>, L</$QUIET>, L</_qwc>, L</vlog>,
+and L</$VERBOSE>.
 
 =head1 VARIABLES
 
-=head2 $TRACE
+=head2 $QUIET
 
-Set to a positive integer to enable tracing.
+Set to a truthy value to disable logging via L</vlog>.  Overrides L</$VERBOSE>.
+Exported as C<*QUIET> so that it can be C<local>ized.
+
+=head2 $VERBOSE
+
+Set to a positive integer to enable logging via L</vlog>.
+Exported as C<*VERBOSE> so that it can be C<local>ized.
 
 =head1 FUNCTIONS
 
@@ -64,6 +71,51 @@ sub _qwc ($) {
     }
     return @retval;
 } #_qwc()
+
+=head2 vlog
+
+Log information to STDERR if L</$VERBOSE> is set.  Usage:
+
+    vlog { <list of things to log> } [optional min verbosity level (default 1)];
+
+The items in the list are joined by C<' '> on output, and a C<'\n'> is added.
+Each line is prefixed with C<'# '> for the benefit of test runs.
+To break the list across multiple lines, specify C<\n> at the beginning of
+a list item.
+
+The list is in C<{}> so that it won't be evaluated if logging is turned off.
+It is a full block, so you can run arbitrary code to decide what to log.
+If the block returns an empty list, vlog will not produce any output.
+However, if the block returns at least one element, vlog will produce at
+least a C<'# '>.
+
+The message will be output only if L</$VERBOSE> is at least the given minimum
+verbosity level (1 by default).
+
+If C<< $VERBOSE >= 4 >>, the filename and line from which vlog was called
+will also be printed.
+
+=cut
+
+sub vlog (&;$) {
+    return if $QUIET;
+    return unless $VERBOSE >= ($_[1] // 1);
+
+    my @log = &{$_[0]}();
+    return unless @log;
+
+    chomp $log[$#log] if $log[$#log];
+    # TODO add an option to number the lines of the output
+    my $msg = join(' ', @log);
+    $msg =~ s/^/# /gm;
+
+    if($VERBOSE >= 4) {
+        my ($package, $filename, $line) = caller;
+        $msg .= " (at $filename:$line)";
+    }
+
+    say STDERR $msg;
+} #vlog()
 
 =head2 import
 

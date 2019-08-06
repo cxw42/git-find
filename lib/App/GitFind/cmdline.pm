@@ -78,266 +78,266 @@ sub new {
 [
 	{#State 0
 		ACTIONS => {
-			'REV' => 1,
-			'LPAREN' => 4,
-			'ACTION' => 7,
-			'NOT' => 8,
-			'TEST' => 6,
-			'SWITCH' => 10
+			'NOT' => 4,
+			'SWITCH' => 1,
+			'TEST' => 3,
+			'REV' => 10,
+			'LPAREN' => 9,
+			'ACTION' => 7
 		},
 		DEFAULT => -1,
 		GOTOS => {
-			'cmdline' => 9,
-			'element' => 5,
-			'expr' => 3,
-			'switches_and_revs' => 2
+			'element' => 8,
+			'switches_and_revs' => 5,
+			'cmdline' => 6,
+			'expr' => 2
 		}
 	},
 	{#State 1
-		DEFAULT => -5
+		DEFAULT => -4
 	},
 	{#State 2
 		ACTIONS => {
-			'REV' => 12,
-			'LPAREN' => 4,
-			'TEST' => 6,
-			'NOT' => 8,
+			'AND' => 17,
+			'OR' => 16,
+			'LPAREN' => 15,
 			'ACTION' => 7,
-			'SWITCH' => 14
-		},
-		DEFAULT => -8,
-		GOTOS => {
-			'element' => 5,
-			'maybeexprplus' => 11,
-			'expr' => 13
-		}
-	},
-	{#State 3
-		ACTIONS => {
-			'TEST' => 6,
-			'NOT' => 21,
-			'ACTION' => 7,
-			'LPAREN' => 19,
-			'OR' => 17,
-			'COMMA' => 15,
-			'AND' => 16
+			'NOT' => 13,
+			'TEST' => 3,
+			'COMMA' => 11
 		},
 		DEFAULT => -2,
 		GOTOS => {
-			'element' => 18,
-			'subsequent_expr' => 20
+			'element' => 14,
+			'subsequent_expr' => 12
 		}
+	},
+	{#State 3
+		DEFAULT => -21
 	},
 	{#State 4
 		ACTIONS => {
-			'ACTION' => 7,
-			'NOT' => 8,
-			'TEST' => 6,
-			'LPAREN' => 4
-		},
-		GOTOS => {
-			'element' => 5,
-			'expr' => 22
+			'expr4' => 18
 		}
 	},
 	{#State 5
-		DEFAULT => -11
+		ACTIONS => {
+			'LPAREN' => 9,
+			'ACTION' => 7,
+			'REV' => 22,
+			'SWITCH' => 20,
+			'TEST' => 3,
+			'NOT' => 4
+		},
+		DEFAULT => -8,
+		GOTOS => {
+			'element' => 8,
+			'maybeexprplus' => 21,
+			'expr' => 19
+		}
 	},
 	{#State 6
-		DEFAULT => -21
+		ACTIONS => {
+			'' => 23
+		}
 	},
 	{#State 7
 		DEFAULT => -22
 	},
 	{#State 8
-		ACTIONS => {
-			'expr4' => 23
-		}
+		DEFAULT => -11
 	},
 	{#State 9
 		ACTIONS => {
-			'' => 24
+			'NOT' => 4,
+			'ACTION' => 7,
+			'TEST' => 3,
+			'LPAREN' => 9
+		},
+		GOTOS => {
+			'element' => 8,
+			'expr' => 24
 		}
 	},
 	{#State 10
-		DEFAULT => -4
+		DEFAULT => -5
 	},
 	{#State 11
-		DEFAULT => -3
+		ACTIONS => {
+			'ACTION' => 7,
+			'TEST' => 3,
+			'LPAREN' => 9,
+			'NOT' => 4
+		},
+		GOTOS => {
+			'expr' => 25,
+			'element' => 8
+		}
 	},
 	{#State 12
-		DEFAULT => -7
+		DEFAULT => -14
 	},
 	{#State 13
 		ACTIONS => {
-			'REV' => 1,
-			'COMMA' => 15,
-			'AND' => 16,
-			'OR' => 17,
-			'LPAREN' => 19,
-			'ACTION' => 7,
-			'NOT' => 21,
-			'TEST' => 6,
-			'SWITCH' => 10
-		},
-		DEFAULT => -9,
-		GOTOS => {
-			'element' => 18,
-			'switches_and_revs' => 25,
-			'subsequent_expr' => 20
+			'expr4' => 26
 		}
 	},
 	{#State 14
-		DEFAULT => -6
+		DEFAULT => -18
 	},
 	{#State 15
 		ACTIONS => {
-			'TEST' => 6,
-			'NOT' => 8,
+			'NOT' => 4,
 			'ACTION' => 7,
-			'LPAREN' => 4
+			'LPAREN' => 9,
+			'TEST' => 3
 		},
 		GOTOS => {
-			'expr' => 26,
-			'element' => 5
+			'expr' => 27,
+			'element' => 8
 		}
 	},
 	{#State 16
 		ACTIONS => {
-			'LPAREN' => 4,
-			'TEST' => 6,
-			'NOT' => 8,
-			'ACTION' => 7
+			'ACTION' => 7,
+			'TEST' => 3,
+			'LPAREN' => 9,
+			'NOT' => 4
 		},
 		GOTOS => {
-			'expr' => 27,
-			'element' => 5
+			'element' => 8,
+			'expr' => 28
 		}
 	},
 	{#State 17
 		ACTIONS => {
-			'LPAREN' => 4,
-			'TEST' => 6,
-			'NOT' => 8,
+			'NOT' => 4,
+			'TEST' => 3,
+			'LPAREN' => 9,
 			'ACTION' => 7
 		},
 		GOTOS => {
-			'expr' => 28,
-			'element' => 5
+			'element' => 8,
+			'expr' => 29
 		}
 	},
 	{#State 18
-		DEFAULT => -18
+		DEFAULT => -16
 	},
 	{#State 19
 		ACTIONS => {
-			'LPAREN' => 4,
-			'TEST' => 6,
-			'NOT' => 8,
+			'NOT' => 13,
+			'SWITCH' => 1,
+			'TEST' => 3,
+			'COMMA' => 11,
+			'REV' => 10,
+			'AND' => 17,
+			'OR' => 16,
+			'LPAREN' => 15,
 			'ACTION' => 7
 		},
+		DEFAULT => -9,
 		GOTOS => {
-			'expr' => 29,
-			'element' => 5
+			'switches_and_revs' => 30,
+			'subsequent_expr' => 12,
+			'element' => 14
 		}
 	},
 	{#State 20
-		DEFAULT => -14
+		DEFAULT => -6
 	},
 	{#State 21
-		ACTIONS => {
-			'expr4' => 30
-		}
+		DEFAULT => -3
 	},
 	{#State 22
-		ACTIONS => {
-			'TEST' => 6,
-			'ACTION' => 7,
-			'NOT' => 21,
-			'LPAREN' => 19,
-			'OR' => 17,
-			'RPAREN' => 31,
-			'COMMA' => 15,
-			'AND' => 16
-		},
-		GOTOS => {
-			'subsequent_expr' => 20,
-			'element' => 18
-		}
+		DEFAULT => -7
 	},
 	{#State 23
-		DEFAULT => -16
+		DEFAULT => 0
 	},
 	{#State 24
-		DEFAULT => 0
+		ACTIONS => {
+			'NOT' => 13,
+			'RPAREN' => 31,
+			'TEST' => 3,
+			'COMMA' => 11,
+			'AND' => 17,
+			'ACTION' => 7,
+			'LPAREN' => 15,
+			'OR' => 16
+		},
+		GOTOS => {
+			'element' => 14,
+			'subsequent_expr' => 12
+		}
 	},
 	{#State 25
 		ACTIONS => {
-			'REV' => 12,
-			'SWITCH' => 14
-		},
-		DEFAULT => -10
-	},
-	{#State 26
-		ACTIONS => {
-			'TEST' => 6,
+			'NOT' => 13,
+			'TEST' => 3,
+			'AND' => 17,
+			'LPAREN' => 15,
 			'ACTION' => 7,
-			'NOT' => 21,
-			'LPAREN' => 19,
-			'OR' => 17,
-			'AND' => 16
+			'OR' => 16
 		},
 		DEFAULT => -12,
 		GOTOS => {
-			'element' => 18,
-			'subsequent_expr' => 20
+			'subsequent_expr' => 12,
+			'element' => 14
 		}
+	},
+	{#State 26
+		DEFAULT => -19
 	},
 	{#State 27
 		ACTIONS => {
-			'NOT' => 21,
+			'OR' => 16,
+			'LPAREN' => 15,
 			'ACTION' => 7,
-			'TEST' => 6,
-			'LPAREN' => 19
+			'AND' => 17,
+			'COMMA' => 11,
+			'TEST' => 3,
+			'RPAREN' => 32,
+			'NOT' => 13
 		},
-		DEFAULT => -15,
 		GOTOS => {
-			'subsequent_expr' => 20,
-			'element' => 18
+			'subsequent_expr' => 12,
+			'element' => 14
 		}
 	},
 	{#State 28
 		ACTIONS => {
-			'LPAREN' => 19,
-			'AND' => 16,
-			'TEST' => 6,
+			'TEST' => 3,
+			'NOT' => 13,
 			'ACTION' => 7,
-			'NOT' => 21
+			'LPAREN' => 15,
+			'AND' => 17
 		},
 		DEFAULT => -13,
 		GOTOS => {
-			'subsequent_expr' => 20,
-			'element' => 18
+			'element' => 14,
+			'subsequent_expr' => 12
 		}
 	},
 	{#State 29
 		ACTIONS => {
-			'TEST' => 6,
-			'NOT' => 21,
-			'ACTION' => 7,
-			'LPAREN' => 19,
-			'OR' => 17,
-			'COMMA' => 15,
-			'AND' => 16,
-			'RPAREN' => 32
+			'NOT' => 13,
+			'TEST' => 3,
+			'LPAREN' => 15,
+			'ACTION' => 7
 		},
+		DEFAULT => -15,
 		GOTOS => {
-			'element' => 18,
-			'subsequent_expr' => 20
+			'element' => 14,
+			'subsequent_expr' => 12
 		}
 	},
 	{#State 30
-		DEFAULT => -19
+		ACTIONS => {
+			'REV' => 22,
+			'SWITCH' => 20
+		},
+		DEFAULT => -10
 	},
 	{#State 31
 		DEFAULT => -17
@@ -667,7 +667,7 @@ sub _consume_expression_element {
             #say STDERR "#   - parameters until $opts{nparam}";
             die "Need argument(s) for --$arg" if @$lrArgv == 1;
             my $lastarg;
-            say STDERR "Args: ", join ' : ', @$lrArgv;
+            #say STDERR "Args: ", join ' : ', @$lrArgv;
             for(1..$#$lrArgv) {
                 $lastarg=$_, last if $lrArgv->[$_] =~ $opts{nparam};
             }
