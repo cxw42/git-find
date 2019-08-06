@@ -12,7 +12,8 @@ use App::GitFind::cmdline;
 use App::GitFind::Runner;
 use Getopt::Long 2.34 ();
 use Git::Raw;
-use Iterator::Simple qw(ichain imap iter iterator);
+use Git::Raw::Submodule;
+use Iterator::Simple qw(ichain iflatten igrep imap iter iterator);
 use List::SomeUtils;    # uniq
 use Path::Class;
 
@@ -89,6 +90,7 @@ sub BUILD {
         vlog { 'In a submodule' };
         # TODO move outward to the parent
     }
+
 } #BUILD()
 
 =head2 run
@@ -101,7 +103,7 @@ sub run {
     my $self = shift;
     my $runner = App::GitFind::Runner->new(-expr => $self->_expr);
 
-    my $iter = $self->_entry_iterator;
+    my $iter = $self->_entry_iterator($self->_repo);
 
     while (defined(my $entry = $iter->next)) {
         vlog { $entry->path, '>>>' } 3;
@@ -117,35 +119,71 @@ sub run {
 =head2 _entry_iterator
 
 Create an iterator for the entries to be processed.  Returns an
-L<Iterator::Simple>.
+L<Iterator::Simple>.  Usage:
+
+    my $iter = $self->_entry_iterator($repo);
 
 =cut
 
 sub _entry_iterator {
-    my $self = shift;
+    my ($self, $repo) = @_;
 
-    return ichain(
-        map { $self->_iterator_for($_) }
-            List::SomeUtils::uniq @{$self->_revs}
-    );
+    # Make iterators for the requested revs with respect to $repo
+    my @iters =
+        map { $self->_iterator_for(-rev => $_, -in => $repo) }
+            List::SomeUtils::uniq @{$self->_revs};
 
+    # Does $repo have submodules? (EXPERIMENTAL)
+    my @submodule_names;
+    Git::Raw::Submodule->foreach($repo, sub { push @submodule_names, $_[0]; });
+    vlog { "Submodules:", join ', ', @submodule_names } if @submodule_names;
+
+    # Make iterators for the submodules.  Don't start on a submodule
+    # until we've finished with the top level.
+    if(@submodule_names) {
+        my $name_iter = iter([@submodule_names]);
+
+        my $subrepo_iter =
+            imap {
+                vlog { "Entering submodule", $_ } 2;
+                my $smrepo = Git::Raw::Submodule->lookup($repo, $_);
+                unless($smrepo) {
+                    vwarn { "Could not load submodule $_" };
+                    return undef;
+                }
+                return $self->_entry_iterator($smrepo->open)
+            }
+            $name_iter;
+
+        my $submodule_iter = igrep { !!$_ } $subrepo_iter;
+
+        push @iters, $submodule_iter;
+    }
+
+    return iflatten ichain @iters;
 } #_entry_iterator
 
 =head2 _iterator_for
 
-Return an iterator for a particular rev.
+Return an iterator for a particular rev in a particular repository.  Usage:
+
+    my $iterator = $self->_iterator_for('rev', -in => $repo);
 
 =cut
 
 sub _iterator_for {
-    my ($self, $rev) = @_;
-    # TODO find files in scope $self->_revs, repo $self->_repo
+    my ($self, %args) = getparameters('self', [qw(rev in)], @_);
+    my $rev = $args{rev};
+    my $repo = $args{in};
+
+    # TODO find files in scope $self->_revs, repo $repo
 
     if(!defined $rev) {     # The index of the current repo
         require App::GitFind::Entry::GitIndex;
-        my $index = $self->_repo->index;
-        return imap { App::GitFind::Entry::GitIndex->new(-obj=>$_) }
-                iter([$index->entries]);
+        my $index = $repo->index;
+        return imap {
+            App::GitFind::Entry::GitIndex->new(-obj=>$_, -repo=>$repo)
+        } iter([$index->entries]);
 
     } elsif($rev eq 'DEBUG') {   # DEBUG
         require App::GitFind::Entry::PathClass;
@@ -157,7 +195,7 @@ sub _iterator_for {
         require File::Find::Object;
         require App::GitFind::Entry::OnDisk;
         my $base_iter = File::Find::Object->new({followlink=>true},
-                                                $self->_repotop->relative);
+                                                dir($repo->workdir)->relative);
         return imap { App::GitFind::Entry::OnDisk->new(-obj=>$_) }
                 iterator { $base_iter->next_obj };
                 # Separate iterator and imap so imap won't be called once

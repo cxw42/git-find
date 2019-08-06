@@ -14,19 +14,21 @@ use parent 'App::GitFind::Entry';
 # Fields.  Not all have values.
 use Class::Tiny
     'obj',      # A Git::Raw::Index::Entry instance.  Required.
+    'repo',     # A Git::Raw::Repository instance.  Required.
     {
+
         # The lstat() results for this entry.  lstat() rather than stat()
         # because searches treat links as individual entries rather than
         # as their referents.  (TODO global option?)
         # This is a lazy initializer so we don't stat() if we don't have to.
-        '_stat' => sub { [$_[0]->obj->lstat()] },
+        '_stat' => sub { [$_[0]->_pathclass->lstat()] },
 
         # Lazy cache of a Path::Class instance for this path
-        '_pathclass' => sub { file($_[0]->obj->path) },
+        '_pathclass' => sub { file($_[0]->repo->workdir, $_[0]->obj->path) },
 
         isdir => sub { false },     # Git doesn't store dirs, only files.
         name => sub { $_[0]->_pathclass->basename },
-        path => sub { $_[0]->obj->path },
+        path => sub { $_[0]->_pathclass },
 
         # TODO figure out the rest of these
         dev => sub { ...; $_[0]->_stat->[0] },
@@ -54,8 +56,8 @@ use Class::Tiny
 =head1 SYNOPSIS
 
 This represents a single file or directory being checked against an expression.
-This particular concrete class represents a file or directory on disk.
-It requires a L<File::Find::Object::Result> instance.  Usage:
+This particular concrete class represents a Git index entry.
+It requires a L<Git::Raw::Index::Entry> instance.  Usage:
 
     use Git::Raw 0.83;
     my $index = Git::Raw::Repository->discover('.')->index;
@@ -86,10 +88,14 @@ Enforces the requirements on the C<-obj> argument to C<new()>.
 
 sub BUILD {
     my $self = shift;
-    die "Usage: @{[__PACKAGE__]}->new(-obj=>...)"
+    die "Usage: @{[__PACKAGE__]}->new(-obj=>..., -repo=>...)"
         unless $self->obj;
     die "-obj must be a Git::Raw::Index::Entry"
         unless $self->obj->DOES('Git::Raw::Index::Entry');
+    die "Usage: @{[__PACKAGE__]}->new(-repo=>..., -obj=>...)"
+        unless $self->repo;
+    die "-obj must be a Git::Raw::Repository"
+        unless $self->repo->DOES('Git::Raw::Repository');
 } #BUILD()
 
 1;

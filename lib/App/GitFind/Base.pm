@@ -8,7 +8,8 @@ our $VERSION = '0.000001';
 
 use parent 'Exporter';
 use vars::i [ '$VERBOSE' => 0, '$QUIET' => 0 ];
-use vars::i '@EXPORT' => qw(*VERBOSE *QUIET true false _qwc vlog);
+use vars::i '@EXPORT' => qw(true false
+                            getparameters *QUIET _qwc *VERBOSE vlog vwarn);
 
 use Import::Into;
 
@@ -18,6 +19,7 @@ use constant false => !!0;
 # Re-exports
 use Carp ();
 use Data::Dumper::Compact ();
+use Getargs::Mixed;
 
 # === Documentation === {{{1
 
@@ -30,8 +32,9 @@ App::GitFind::Base - base definitions for App::GitFind
     use App::GitFind::Base;
 
 Imports L<Carp>, L<Data::Dumper::Compact> (with the C<ddc> option), and
-local symbols C<true>, C<false>, L</$QUIET>, L</_qwc>, L</vlog>,
-and L</$VERBOSE>.
+L<Getargs::Mixed>.  Sets L<strict> and L<warnings>.  Installes local symbols
+C<true>, C<false>, L</getparameters>, L</$QUIET>, L</_qwc>, L</$VERBOSE>,
+L</vwarn>, and L</vlog>.
 
 =head1 VARIABLES
 
@@ -71,6 +74,20 @@ sub _qwc ($) {
     }
     return @retval;
 } #_qwc()
+
+=head2 getparameters
+
+An alias of the C<parameters()> function from L<Getargs::Mixed>, but with
+C<-undef_ok> set.
+
+=cut
+
+my $GM = Getargs::Mixed->new(-undef_ok => true);
+
+sub getparameters {
+    unshift @_, $GM;
+    goto &Getargs::Mixed::parameters;
+} #getparameters()
 
 =head2 vlog
 
@@ -117,6 +134,21 @@ sub vlog (&;$) {
     say STDERR $msg;
 } #vlog()
 
+=head2 vwarn
+
+As L</vlog>, but warns regardless of L</$VERBOSE>.  Does respect L</$QUIET>.
+
+=cut
+
+sub vwarn (&) {
+    return if $QUIET;
+
+    my @log = &{$_[0]}();
+    return unless @log;
+
+    vlog { "Warning:", @log } $VERBOSE;
+} #vwarn()
+
 =head2 import
 
 See L</SYNOPSIS>
@@ -125,9 +157,13 @@ See L</SYNOPSIS>
 
 sub import {
     my $target = caller;
-    $_[0]->export_to_level(1, @_);
-    Carp->import::into($target, qw(carp croak confess cluck));
+    $_[0]->export_to_level(1, @_);                              # Symbols
+
+    $_->import::into($target) foreach qw(strict warnings);      # Pragmas
+
+    Carp->import::into($target, qw(carp croak confess cluck));  # Packages
     Data::Dumper::Compact->import::into($target, 'ddc');
+    Getargs::Mixed->import::into($target);
 } #import()
 
 1;
