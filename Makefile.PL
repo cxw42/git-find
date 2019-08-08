@@ -176,6 +176,7 @@ my %opts = (
     TEST_REQUIRES => {
         'Capture::Tiny' => '0.39',
         'Carp' => '0',
+        'Cwd' => '0',
         'Exporter' => '0',
         'File::Basename' => '0',
         'Import::Into' => '0',
@@ -195,8 +196,8 @@ my %opts = (
     PREREQ_PM => {
         #'Class::Method::Modifiers' => '2.10',   # most recent code change
         'Class::Tiny' => '1.001',   # BUILDARGS
-
-        #'Class::Tiny::ConstrainedAccessor' => '0.000010',   # custom constraints
+        #'Class::Tiny::ConstrainedAccessor' => '0.000010', # custom constraints
+        'Class::Tiny::Immutable' => '0',
 
         #'Config' => '0',
         #'Cwd' => '0',

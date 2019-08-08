@@ -5,6 +5,7 @@ use 5.010;
 use strict;
 use warnings;
 use App::GitFind::Base;
+use Path::Class;
 
 our $VERSION = '0.000001'; # TRIAL
 
@@ -12,30 +13,26 @@ use parent 'App::GitFind::Entry';
 
 # Fields.  Not all have values.
 use Class::Tiny
-    'obj',      # A File::Find::Object::Result instance.  Required.
-    {
-        isdir => sub { $_[0]->obj->is_dir },
-        name => sub {   # basename, whether it's a file or directory
-            my @x = $_[0]->obj->full_components;
-            $x[$#x]
-        },
+    'obj';      # A File::Find::Object::Result instance.  Required.
 
-        path => sub { $_[0]->obj->path },
+use Class::Tiny::Immutable {
+    _lstat => sub { $_[0]->obj->stat_ret },
 
-        dev => sub { $_[0]->obj->stat_ret()->[0] },
-        ino => sub { $_[0]->obj->stat_ret()->[1] },
-        mode => sub { $_[0]->obj->stat_ret()->[2] },
-        nlink => sub { $_[0]->obj->stat_ret()->[3] },
-        uid => sub { $_[0]->obj->stat_ret()->[4] },
-        gid => sub { $_[0]->obj->stat_ret()->[5] },
-        rdev => sub { $_[0]->obj->stat_ret()->[6] },
-        size => sub { $_[0]->obj->stat_ret()->[7] },
-        atime => sub { $_[0]->obj->stat_ret()->[8] },
-        mtime => sub { $_[0]->obj->stat_ret()->[9] },
-        ctime  => sub { $_[0]->obj->stat_ret()->[10] },
-        blksize => sub { $_[0]->obj->stat_ret()->[11] },
-        blocks => sub { $_[0]->obj->stat_ret()->[12] },
-    };
+    # Lazy Path::Class
+    _pathclass => sub {
+        $_[0]->isdir
+            ? dir(@{$_[0]->obj->full_components})
+            : file(@{$_[0]->obj->full_components})
+    },
+
+    isdir => sub { $_[0]->obj->is_dir },
+    name => sub {   # basename, whether it's a file or directory
+        my @x = $_[0]->obj->full_components;
+        $x[$#x]
+    },
+
+    path => sub { $_[0]->_pathclass->relative($_[0]->searchbase) },
+};
 
 # Docs {{{1
 
@@ -78,7 +75,7 @@ Enforces the requirements on the C<-obj> argument to C<new()>.
 
 sub BUILD {
     my $self = shift;
-    die "Usage: @{[__PACKAGE__]}->new(-obj=>...)"
+    die "Usage: @{[ref $self]}->new(-obj=>...)"
         unless $self->obj;
     die "-obj must be a File::Find::Object::Result"
         unless $self->obj->DOES('File::Find::Object::Result');

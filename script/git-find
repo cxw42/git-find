@@ -1,7 +1,8 @@
 #!/usr/bin/env perl
 use App::GitFind;
+use Cwd;
 our $VERSION = $App::GitFind::VERSION;  # for Getopt::Long auto_version
-exit App::GitFind->new(-argv => \@ARGV)->run;
+exit App::GitFind->new(-argv => \@ARGV, -searchbase=>getcwd)->run;
 __END__
 
 # === Documentation === {{{1

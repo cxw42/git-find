@@ -13,33 +13,15 @@ use parent 'App::GitFind::Entry';
 
 # Fields.  Not all have values.
 use Class::Tiny
-    'obj',      # A Path::Class instance.  Required.
-    {
-        # The lstat() results for this entry.  lstat() rather than stat()
-        # because searches treat links as individual entries rather than
-        # as their referents.  (TODO global option?)
-        # This is a lazy initializer so we don't stat() if we don't have to.
-        '_stat' => sub { [$_[0]->obj->lstat()] },
+    'obj';      # A Path::Class instance.  Required.
+use Class::Tiny::Immutable {
+    '_lstat' => sub { [$_[0]->obj->lstat()] },
 
-        isdir => sub { $_[0]->obj->is_dir },
-        name => sub { $_[0]->obj->basename },
-        path => sub { '' . $_[0]->obj },
+    isdir => sub { $_[0]->obj->is_dir },
+    name => sub { $_[0]->obj->basename },
+    path => sub { $_[0]->obj->relative($_[0]->searchbase) },
 
-        dev => sub { $_[0]->_stat->[0] },
-        ino => sub { $_[0]->_stat->[1] },
-        mode => sub { $_[0]->_stat->[2] },
-        nlink => sub { $_[0]->_stat->[3] },
-        uid => sub { $_[0]->_stat->[4] },
-        gid => sub { $_[0]->_stat->[5] },
-        rdev => sub { $_[0]->_stat->[6] },
-        size => sub { $_[0]->_stat->[7] },
-        atime => sub { $_[0]->_stat->[8] },
-        mtime => sub { $_[0]->_stat->[9] },
-        ctime  => sub { $_[0]->_stat->[10] },
-        blksize => sub { $_[0]->_stat->[11] },
-        blocks => sub { $_[0]->_stat->[12] },
-
-    };
+};
 
 # Docs {{{1
 
@@ -81,7 +63,7 @@ Enforces the requirements on the C<-obj> argument to C<new()>.
 
 sub BUILD {
     my $self = shift;
-    die "Usage: @{[__PACKAGE__]}->new(-obj=>...)"
+    die "Usage: @{[ref $self]}->new(-obj=>...)"
         unless $self->obj;
     die "-obj must be a Path::Class"
         unless $self->obj->DOES('Path::Class::Entity');

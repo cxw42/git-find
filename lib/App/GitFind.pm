@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use parent 'App::GitFind::Class';
-use Class::Tiny qw(argv _expr _revs _repo _repotop);
+use Class::Tiny qw(argv _expr _revs _repo _repotop _searchbase);
 
 use App::GitFind::Base;
 use App::GitFind::cmdline;
@@ -43,7 +43,7 @@ from Perl code:
 
 Process the arguments.  Usage:
 
-    my $gf = App::GitFind->new(-argv => \@ARGV);
+    my $gf = App::GitFind->new(-argv => \@ARGV, -searchbase => Cwd::getcwd);
 
 May modify the provided array.  May C<exit()>, e.g., on C<--help>.
 
@@ -53,6 +53,7 @@ sub BUILD {
     my ($self, $hrArgs) = @_;
     croak "Need a -argv arrayref" unless ref $hrArgs->{argv} eq 'ARRAY';
     my $details = _process_options($hrArgs->{argv});
+    croak "Need a -searchbase" unless defined $hrArgs->{searchbase};
 
     # Handle default -print
     if(!$details->{expr}) {             # Default: -print
@@ -73,6 +74,7 @@ sub BUILD {
     # Copy information into our instance fields
     $self->_expr($details->{expr});
     $self->_revs($details->{revs});
+    $self->_searchbase(dir($hrArgs->{searchbase}));
 
     # Find the repo we're in.  If we're in a submodule, that will be the
     # repo of that submodule.
@@ -82,7 +84,8 @@ sub BUILD {
     $self->_repotop( dir($self->_repo->workdir) );  # $repo->path is .git/
     vlog {
         "Repository:", $self->_repo->path,
-        "\nWorking dir:", $self->_repotop
+        "\nWorking dir:", $self->_repotop,
+        "\nSearch base:", $self->_searchbase,
     };
 
     # Are we in a submodule?
@@ -182,13 +185,15 @@ sub _iterator_for {
         require App::GitFind::Entry::GitIndex;
         my $index = $repo->index;
         return imap {
-            App::GitFind::Entry::GitIndex->new(-obj=>$_, -repo=>$repo)
+            App::GitFind::Entry::GitIndex->new(-obj=>$_, -repo=>$repo,
+                -searchbase=>$self->_searchbase)
         } iter([$index->entries]);
 
     } elsif($rev eq 'DEBUG') {   # DEBUG
         require App::GitFind::Entry::PathClass;
         return iter([
-            App::GitFind::Entry::PathClass->new(-obj=>file('./TEST!!'))
+            App::GitFind::Entry::PathClass->new(-obj=>file('./TEST!!'),
+                -searchbase=>$self->_searchbase)
         ]);
 
     } elsif($rev eq ']]') { # The current working directory
@@ -196,7 +201,9 @@ sub _iterator_for {
         require App::GitFind::Entry::OnDisk;
         my $base_iter = File::Find::Object->new({followlink=>true},
                                                 dir($repo->workdir)->relative);
-        return imap { App::GitFind::Entry::OnDisk->new(-obj=>$_) }
+        return  imap { App::GitFind::Entry::OnDisk->new(-obj=>$_,
+                                            -searchbase=>$self->_searchbase)
+                }
                 iterator { $base_iter->next_obj };
                 # Separate iterator and imap so imap won't be called once
                 # next_obj returns undef.
