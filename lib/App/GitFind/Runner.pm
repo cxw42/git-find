@@ -7,12 +7,13 @@ use warnings;
 our $VERSION = '0.000001';
 
 use parent 'App::GitFind::Class';
-use Class::Tiny qw(expr);
+use Class::Tiny qw(expr searchbase);
 
 # Imports
 use App::GitFind::Base;
 use App::GitFind::Actions qw(argdetails);
 use App::GitFind::FileStatLs ();
+use File::Spec;
 use Getargs::Mixed;
 use Git::Raw;
 
@@ -80,6 +81,28 @@ sub _process {
 
     return $self->$func(@arg);
 } #_process()
+
+# }}}1
+# === Helpers === {{{1
+
+=head2 dot_relative_path
+
+Given a path, adds C<./> or C<.\> unless it is an absolute path.  This is
+a hacked workaround for the issue noted in
+L<https://bitbucket.org/shlomif/perl-file-find-object/issues/3/not-consistently-present-in-returned-paths>.
+
+=cut
+
+# Make a regex that will match ./ or .\ in a platform-independent way
+my $_dotslash = File::Spec->catfile('.','');    # platform-independent ./
+$_dotslash = qr{^\Q$_dotslash\E};
+
+sub dot_relative_path {
+    my $path = $_[1]->path;     # $_[1] is an Entry
+    return $path if File::Spec->file_name_is_absolute($path);
+    return $path if $path =~ $_dotslash;
+    return File::Spec->catfile('.',$path);
+} #dot_relative_path()
 
 # }}}1
 # === Logical operators === {{{1
@@ -185,9 +208,9 @@ sub do_ls { print App::GitFind::FileStatLs::ls_stat($_[1]->path); true } # $_[0]
     # TODO optimization?  Pull the stat() results from $_[1] rather than
     # re-statting.  May not be an issue.
 
-sub do_print { say $_[1]->path; true }        # $_[0] = self
+sub do_print { say $_[0]->dot_relative_path($_[1]); true }  # $_[0] = self
 
-sub do_print0 { print $_[1]->path, "\0"; true }    # $_[0] = self
+sub do_print0 { print $_[0]->dot_relative_path($_[1]), "\0"; true }
 
 # prune
 
