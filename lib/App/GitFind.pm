@@ -99,7 +99,8 @@ sub BUILD {
     # Should we scan submodules?
     $self->_scan_submodules(true);  # Yes, by default
     $self->_scan_submodules(false)  # No, if ]] is the only ref
-        if @{$self->_revs} == 1 && $self->_revs->[0] eq ']]';
+        if @{$self->_revs} == 1 && defined $self->_revs->[0] &&
+            $self->_revs->[0] eq ']]';
 
 } #BUILD()
 
