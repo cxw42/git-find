@@ -100,7 +100,7 @@ $_dotslash = qr{^\Q$_dotslash\E};
 sub dot_relative_path {
     my $path = $_[1]->path;     # $_[1] is an Entry
     return $path if File::Spec->file_name_is_absolute($path);
-    return $path if $path =~ $_dotslash;
+    return $path if $path =~ $_dotslash || $path eq '.';
     return File::Spec->catfile('.',$path);
 } #dot_relative_path()
 

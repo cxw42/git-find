@@ -5,7 +5,8 @@ use strict;
 use warnings;
 
 use parent 'App::GitFind::Class';
-use Class::Tiny qw(argv _expr _revs _repo _repotop _searchbase);
+use Class::Tiny qw(argv _expr _revs _repo _repotop _searchbase
+    _scan_submodules);
 
 use App::GitFind::Base;
 use App::GitFind::cmdline;
@@ -13,6 +14,7 @@ use App::GitFind::Runner;
 use Getopt::Long 2.34 ();
 use Git::Raw;
 use Git::Raw::Submodule;
+use IO::Handle;
 use Iterator::Simple qw(ichain iflatten igrep imap iter iterator);
 use List::SomeUtils;    # uniq
 use Path::Class;
@@ -94,6 +96,11 @@ sub BUILD {
         # TODO move outward to the parent
     }
 
+    # Should we scan submodules?
+    $self->_scan_submodules(true);  # Yes, by default
+    $self->_scan_submodules(false)  # No, if ]] is the only ref
+        if @{$self->_revs} == 1 && $self->_revs->[0] eq ']]';
+
 } #BUILD()
 
 =head2 run
@@ -105,6 +112,11 @@ Does the work.  Call as C<< exit($obj->run()) >>.  Returns a shell exit code.
 sub run {
     my $self = shift;
     my $runner = App::GitFind::Runner->new(-expr => $self->_expr);
+
+    if($VERBOSE) {
+        STDOUT->autoflush(true);
+        STDERR->autoflush(true);
+    }
 
     my $iter = $self->_entry_iterator($self->_repo);
 
@@ -136,31 +148,33 @@ sub _entry_iterator {
         map { $self->_iterator_for(-rev => $_, -in => $repo) }
             List::SomeUtils::uniq @{$self->_revs};
 
-    # Does $repo have submodules? (EXPERIMENTAL)
-    my @submodule_names;
-    Git::Raw::Submodule->foreach($repo, sub { push @submodule_names, $_[0]; });
-    vlog { "Submodules:", join ', ', @submodule_names } if @submodule_names;
+    if($self->_scan_submodules) {
+        # Does $repo have submodules? (EXPERIMENTAL)
+        my @submodule_names;
+        Git::Raw::Submodule->foreach($repo, sub { push @submodule_names, $_[0]; });
+        vlog { "Submodules:", join ', ', @submodule_names } if @submodule_names;
 
-    # Make iterators for the submodules.  Don't start on a submodule
-    # until we've finished with the top level.
-    if(@submodule_names) {
-        my $name_iter = iter([@submodule_names]);
+        # Make iterators for the submodules.  Don't start on a submodule
+        # until we've finished with the top level.
+        if(@submodule_names) {
+            my $name_iter = iter([@submodule_names]);
 
-        my $subrepo_iter =
-            imap {
-                vlog { "Entering submodule", $_ } 2;
-                my $smrepo = Git::Raw::Submodule->lookup($repo, $_);
-                unless($smrepo) {
-                    vwarn { "Could not load submodule $_" };
-                    return undef;
+            my $subrepo_iter =
+                imap {
+                    vlog { "Entering submodule", $_ } 2;
+                    my $smrepo = Git::Raw::Submodule->lookup($repo, $_);
+                    unless($smrepo) {
+                        vwarn { "Could not load submodule $_" };
+                        return undef;
+                    }
+                    return $self->_entry_iterator($smrepo->open)
                 }
-                return $self->_entry_iterator($smrepo->open)
-            }
-            $name_iter;
+                $name_iter;
 
-        my $submodule_iter = igrep { !!$_ } $subrepo_iter;
+            my $submodule_iter = igrep { !!$_ } $subrepo_iter;
 
-        push @iters, $submodule_iter;
+            push @iters, $submodule_iter;
+        }
     }
 
     return iflatten ichain @iters;
@@ -199,10 +213,15 @@ sub _iterator_for {
     } elsif($rev eq ']]') { # The current working directory
         require File::Find::Object;
         require App::GitFind::Entry::OnDisk;
-        my $base_iter = File::Find::Object->new({followlink=>true},
-                                                dir($repo->workdir)->relative);
-        return  imap { App::GitFind::Entry::OnDisk->new(-obj=>$_,
-                                            -searchbase=>$self->_searchbase)
+        my $findbase =
+            dir($repo->workdir)->relative($self->_searchbase);
+        my $base_iter = File::Find::Object->new(
+            {followlink=>true}, $findbase
+        );
+        return  igrep { $_ }
+                imap { App::GitFind::Entry::OnDisk->new(-obj=>$_,
+                                            -searchbase=>$self->_searchbase,
+                                            -findbase=>$findbase)
                 }
                 iterator { $base_iter->next_obj };
                 # Separate iterator and imap so imap won't be called once

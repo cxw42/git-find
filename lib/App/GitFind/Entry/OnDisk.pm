@@ -13,7 +13,8 @@ use parent 'App::GitFind::Entry';
 
 # Fields.  Not all have values.
 use Class::Tiny
-    'obj';      # A File::Find::Object::Result instance.  Required.
+    'obj',      # A File::Find::Object::Result instance.  Required.
+    'findbase'; # Where the search started from
 
 use Class::Tiny::Immutable {
     _lstat => sub { $_[0]->obj->stat_ret },
@@ -21,8 +22,8 @@ use Class::Tiny::Immutable {
     # Lazy Path::Class
     _pathclass => sub {
         $_[0]->isdir
-            ? dir(@{$_[0]->obj->full_components})
-            : file(@{$_[0]->obj->full_components})
+            ? dir($_[0]->findbase, @{$_[0]->obj->full_components})
+            : file($_[0]->findbase, @{$_[0]->obj->full_components})
     },
 
     isdir => sub { $_[0]->obj->is_dir },
