@@ -78,23 +78,7 @@ sub BUILD {
     $self->_revs($details->{revs});
     $self->_searchbase(dir($hrArgs->{searchbase}));
 
-    # Find the repo we're in.  If we're in a submodule, that will be the
-    # repo of that submodule.
-    $self->_repo( eval { Git::Raw::Repository->discover('.'); } );
-    die "Not in a Git repository: $@\n" if $@;
-
-    $self->_repotop( dir($self->_repo->workdir) );  # $repo->path is .git/
-    vlog {
-        "Repository:", $self->_repo->path,
-        "\nWorking dir:", $self->_repotop,
-        "\nSearch base:", $self->_searchbase,
-    };
-
-    # Are we in a submodule?
-    if($self->_repo->path =~ m{\.git[\\\/]modules\b}) {
-        vlog { 'In a submodule' };
-        # TODO move outward to the parent
-    }
+    $self->_find_repo;
 
     # Should we scan submodules?
     $self->_scan_submodules(true);  # Yes, by default
@@ -103,6 +87,32 @@ sub BUILD {
             $self->_revs->[0] eq ']]';
 
 } #BUILD()
+
+# Initialize _repo and _repotop
+sub _find_repo {
+    my $self = shift;
+    # Find the repo we're in.  If we're in a submodule, that will be the
+    # repo of that submodule.
+    my $repo = eval { Git::Raw::Repository->discover('.'); };
+    die "Not in a Git repository: $@\n" if $@;
+    $self->_repo($repo);
+
+    $self->_repotop( dir($self->_repo->workdir) );  # $repo->path is .git/
+    vlog {
+        "Repository:", $self->_repo->path,
+        "\nWorking dir:", $self->_repotop,
+        "\nSearch base:", $self->_searchbase,
+    };
+
+    # Are we in a submodule?  If so, move outward to the parent
+    if($self->_repo->path =~ qr{^(.+?[\\\/]\.git)[\\\/]modules[\\\/]}) {
+        my $parent_path = $1;
+        $repo = eval { Git::Raw::Repository->open($parent_path); };
+        die "Could not open parent Git repository in $parent_path: $@\n" if $@;
+        $self->_repo($repo);
+        vlog { 'Moved to outer repo', $parent_path };
+    }
+} #_find_repo()
 
 =head2 run
 

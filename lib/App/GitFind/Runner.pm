@@ -95,7 +95,8 @@ L<https://bitbucket.org/shlomif/perl-file-find-object/issues/3/not-consistently-
 
 # Make a regex that will match ./ or .\ in a platform-independent way
 my $_dotslash = File::Spec->catfile('.','');    # platform-independent ./
-$_dotslash = qr{^\Q$_dotslash\E};
+my $_ddotslash = File::Spec->catfile('..','');    # platform-independent ./
+$_dotslash = qr{^(?:\Q$_dotslash\E|\Q$_ddotslash\E)};
 
 sub dot_relative_path {
     my $path = $_[1]->path;     # $_[1] is an Entry
