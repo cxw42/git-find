@@ -1,4 +1,4 @@
-package App::GitFind::Runner;
+package App::GitFind::FileProcessor;
 
 use 5.010;
 use strict;
@@ -21,12 +21,12 @@ use Git::Raw;
 
 =head1 NAME
 
-App::GitFind::Runner - Test a file against a set of criteria
+App::GitFind::FileProcessor - Test a file against a set of criteria
 
 =head1 SYNOPSIS
 
     my $hrArgs = App::GitFind::cmdline::Parse(\@ARGV);
-    my $runner = App::GitFind::Runner->new(-expr => $hrArgs->{expr});
+    my $runner = App::GitFind::FileProcessor->new(-expr => $hrArgs->{expr});
     $runner->process($some_entry_or_other);
 
 =cut
@@ -273,7 +273,7 @@ sub do_printf { # -printf format.  No newline at the end.
 
 # }}}1
 
-1; # End of App::GitFind::Runner
+1; # End of App::GitFind::FileProcessor
 __END__
 # === Rest of the docs === {{{1
 

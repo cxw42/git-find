@@ -850,7 +850,7 @@ sub Parse {
         yyerror => \&_report_error,
         (@_ ? (yydebug => $_[0]) : ()),
     );
-    $hrRetval->{sawnpa} = $hrData->{SAW_NON_PRUNE_ACTION} if $hrRetval;
+    $hrRetval->{saw_nonprune_action} = $hrData->{SAW_NON_PRUNE_ACTION} if $hrRetval;
     return $hrRetval;
 } #Parse()
 

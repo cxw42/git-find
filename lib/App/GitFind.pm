@@ -10,7 +10,7 @@ use Class::Tiny qw(argv _expr _revs _repo _repotop _searchbase
 
 use App::GitFind::Base;
 use App::GitFind::cmdline;
-use App::GitFind::Runner;
+use App::GitFind::FileProcessor;
 use Getopt::Long 2.34 ();
 use Git::Raw;
 use Git::Raw::Submodule;
@@ -61,7 +61,7 @@ sub BUILD {
     if(!$details->{expr}) {             # Default: -print
         $details->{expr} = { name => 'print' };
 
-    } elsif(!$details->{sawnpa}) {      # With an expr: -print unless an action
+    } elsif(!$details->{saw_nonprune_action}) {      # With an expr: -print unless an action
                                         # other than -prune was given
         $details->{expr} = +{
             AND => [ $details->{expr}, { name => 'print' } ]
@@ -122,7 +122,7 @@ Does the work.  Call as C<< exit($obj->run()) >>.  Returns a shell exit code.
 
 sub run {
     my $self = shift;
-    my $runner = App::GitFind::Runner->new(-expr => $self->_expr);
+    my $runner = App::GitFind::FileProcessor->new(-expr => $self->_expr);
 
     if($VERBOSE) {
         STDOUT->autoflush(true);
