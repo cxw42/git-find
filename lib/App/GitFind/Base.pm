@@ -17,7 +17,7 @@ use constant true => !!1;
 use constant false => !!0;
 
 # Re-exports
-use Carp ();
+use Carp qw(confess);
 use Data::Dumper::Compact ();
 use Getargs::Mixed;
 

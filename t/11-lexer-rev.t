@@ -23,6 +23,7 @@ $gitrevisions_good->load('tag-1-g123ae')->
     ('foo@')
     ('@bar')
     (']')       # `git tag ']'` works!
+    (']]')      # We use this as a special case, but it's a rev to git.
 ;
 
 # The examples from gitrevisions(7)

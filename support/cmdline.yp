@@ -442,7 +442,14 @@ sub _next_token {
             return @retval if @retval;
 
             @retval = _consume_rev($lrArgv);
-            return @retval if @retval;
+            if(@retval) {   # _consume_rev always gives us two elements
+                if($retval[1] eq ']]') {
+                    $parser->YYData->{SAW_RR} ||= true;
+                } else {
+                    $parser->YYData->{SAW_NON_RR} ||= true;
+                }
+                return @retval;
+            }
 
             die "I don't understand argument '$lrArgv->[0]' before --";
 
@@ -468,7 +475,14 @@ sub _next_token {
 
         # Last of all, revs.
         @retval = _consume_rev($lrArgv);
-        return @retval if @retval;
+        if(@retval) {   # _consume_rev always gives us two elements
+            if($retval[1] eq ']]') {
+                $parser->YYData->{SAW_RR} ||= true;
+            } else {
+                $parser->YYData->{SAW_NON_RR} ||= true;
+            }
+            return @retval;
+        }
 
         die "I don't understand argument $lrArgv->[0]";
     }
@@ -498,6 +512,8 @@ Parse arguments.  Usage:
 
     my $hrArgs = App::GitFind::cmdline::Parse(\@ARGV);
 
+Modifies the C<@ARGV> array.
+
 =cut
 
 sub Parse {
@@ -506,19 +522,30 @@ sub Parse {
     my $parser = __PACKAGE__->new;
     my $hrData = $parser->YYData;
 
+    # Data we use while parsing
     $hrData->{HAS_DASH_DASH} = !!(scalar grep { $_ eq '--' } @$lrArgv);
     $hrData->{ONLY_EXPRESSIONS} = false;    # true once we hit '--'
     $hrData->{ARGV} = $lrArgv;
+
+    # Data we determine while parsing and return to the caller
 
     # Keep track of whether an action other than -prune has been seen.
     # If not, -print is added automatically.
     $hrData->{SAW_NON_PRUNE_ACTION} = false;
 
+    # Keep track of the types of rev we've seen (]] or non-]])
+    $hrData->{SAW_RR} = false;
+    $hrData->{SAW_NON_RR} = false;
+
     my $hrRetval = $parser->YYParse(yylex => \&_next_token,
         yyerror => \&_report_error,
         (@_ ? (yydebug => $_[0]) : ()),
     );
+
+    # Add non-AST data to the retval
     $hrRetval->{saw_nonprune_action} = $hrData->{SAW_NON_PRUNE_ACTION} if $hrRetval;
+    $hrRetval->{saw_rr} = $hrData->{SAW_RR};
+    $hrRetval->{saw_non_rr} = $hrData->{SAW_NON_RR};
     return $hrRetval;
 } #Parse()
 

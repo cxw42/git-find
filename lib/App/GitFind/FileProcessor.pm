@@ -82,6 +82,37 @@ sub _process {
     return $self->$func(@arg);
 } #_process()
 
+=head2 callback
+
+Returns a callback that will process an entry.  Usage:
+
+    my $callback = $processor->callback([$log]);    # Create the callback
+    $callback->($entry);                    # Invoke the callback
+
+The optional C<$log> parameter, if truthy, provides extra debug output.
+
+=cut
+
+sub callback {
+    my ($self, $log) = @_;
+    my $expr = $self->expr;
+    if($log) {
+        return sub {
+            my $entry = $_[0];
+            vlog { '>>>', $entry->path } 3;
+            my $matched = $self->_process($entry, $expr);
+            vlog { '<<<', $matched ? 'matched' : 'did not match' } 3;
+            return $matched;
+        }
+
+    } else {    # not logging
+        return sub {
+            return $self->_process(shift, $expr);
+            # Future optimization?  Use goto &_process instead?
+        }
+    }
+} #callback
+
 # }}}1
 # === Helpers === {{{1
 

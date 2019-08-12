@@ -78,96 +78,96 @@ sub new {
 [
 	{#State 0
 		ACTIONS => {
-			'NOT' => 4,
-			'SWITCH' => 1,
-			'TEST' => 3,
-			'REV' => 10,
-			'LPAREN' => 9,
-			'ACTION' => 7
+			'ACTION' => 6,
+			'LPAREN' => 5,
+			'SWITCH' => 7,
+			'NOT' => 9,
+			'REV' => 3,
+			'TEST' => 2
 		},
 		DEFAULT => -1,
 		GOTOS => {
 			'element' => 8,
-			'switches_and_revs' => 5,
-			'cmdline' => 6,
-			'expr' => 2
+			'switches_and_revs' => 10,
+			'expr' => 1,
+			'cmdline' => 4
 		}
 	},
 	{#State 1
-		DEFAULT => -4
-	},
-	{#State 2
 		ACTIONS => {
-			'AND' => 17,
-			'OR' => 16,
-			'LPAREN' => 15,
-			'ACTION' => 7,
-			'NOT' => 13,
-			'TEST' => 3,
-			'COMMA' => 11
+			'OR' => 13,
+			'TEST' => 2,
+			'AND' => 12,
+			'COMMA' => 11,
+			'LPAREN' => 17,
+			'ACTION' => 6,
+			'NOT' => 14
 		},
 		DEFAULT => -2,
 		GOTOS => {
-			'element' => 14,
-			'subsequent_expr' => 12
+			'element' => 15,
+			'subsequent_expr' => 16
 		}
 	},
-	{#State 3
+	{#State 2
 		DEFAULT => -21
+	},
+	{#State 3
+		DEFAULT => -5
 	},
 	{#State 4
 		ACTIONS => {
-			'expr4' => 18
+			'' => 18
 		}
 	},
 	{#State 5
 		ACTIONS => {
-			'LPAREN' => 9,
-			'ACTION' => 7,
-			'REV' => 22,
-			'SWITCH' => 20,
-			'TEST' => 3,
-			'NOT' => 4
+			'NOT' => 9,
+			'ACTION' => 6,
+			'LPAREN' => 5,
+			'TEST' => 2
 		},
-		DEFAULT => -8,
 		GOTOS => {
-			'element' => 8,
-			'maybeexprplus' => 21,
-			'expr' => 19
+			'expr' => 19,
+			'element' => 8
 		}
 	},
 	{#State 6
-		ACTIONS => {
-			'' => 23
-		}
+		DEFAULT => -22
 	},
 	{#State 7
-		DEFAULT => -22
+		DEFAULT => -4
 	},
 	{#State 8
 		DEFAULT => -11
 	},
 	{#State 9
 		ACTIONS => {
-			'NOT' => 4,
-			'ACTION' => 7,
-			'TEST' => 3,
-			'LPAREN' => 9
-		},
-		GOTOS => {
-			'element' => 8,
-			'expr' => 24
+			'expr4' => 20
 		}
 	},
 	{#State 10
-		DEFAULT => -5
+		ACTIONS => {
+			'NOT' => 9,
+			'LPAREN' => 5,
+			'ACTION' => 6,
+			'SWITCH' => 24,
+			'REV' => 23,
+			'TEST' => 2
+		},
+		DEFAULT => -8,
+		GOTOS => {
+			'expr' => 22,
+			'maybeexprplus' => 21,
+			'element' => 8
+		}
 	},
 	{#State 11
 		ACTIONS => {
-			'ACTION' => 7,
-			'TEST' => 3,
-			'LPAREN' => 9,
-			'NOT' => 4
+			'NOT' => 9,
+			'ACTION' => 6,
+			'LPAREN' => 5,
+			'TEST' => 2
 		},
 		GOTOS => {
 			'expr' => 25,
@@ -175,172 +175,172 @@ sub new {
 		}
 	},
 	{#State 12
-		DEFAULT => -14
-	},
-	{#State 13
 		ACTIONS => {
-			'expr4' => 26
-		}
-	},
-	{#State 14
-		DEFAULT => -18
-	},
-	{#State 15
-		ACTIONS => {
-			'NOT' => 4,
-			'ACTION' => 7,
-			'LPAREN' => 9,
-			'TEST' => 3
+			'ACTION' => 6,
+			'LPAREN' => 5,
+			'TEST' => 2,
+			'NOT' => 9
 		},
 		GOTOS => {
-			'expr' => 27,
+			'expr' => 26,
 			'element' => 8
 		}
 	},
-	{#State 16
+	{#State 13
 		ACTIONS => {
-			'ACTION' => 7,
-			'TEST' => 3,
-			'LPAREN' => 9,
-			'NOT' => 4
+			'NOT' => 9,
+			'TEST' => 2,
+			'LPAREN' => 5,
+			'ACTION' => 6
 		},
 		GOTOS => {
 			'element' => 8,
-			'expr' => 28
+			'expr' => 27
 		}
+	},
+	{#State 14
+		ACTIONS => {
+			'expr4' => 28
+		}
+	},
+	{#State 15
+		DEFAULT => -18
+	},
+	{#State 16
+		DEFAULT => -14
 	},
 	{#State 17
 		ACTIONS => {
-			'NOT' => 4,
-			'TEST' => 3,
-			'LPAREN' => 9,
-			'ACTION' => 7
+			'LPAREN' => 5,
+			'ACTION' => 6,
+			'TEST' => 2,
+			'NOT' => 9
 		},
 		GOTOS => {
-			'element' => 8,
-			'expr' => 29
+			'expr' => 29,
+			'element' => 8
 		}
 	},
 	{#State 18
-		DEFAULT => -16
+		DEFAULT => 0
 	},
 	{#State 19
 		ACTIONS => {
-			'NOT' => 13,
-			'SWITCH' => 1,
-			'TEST' => 3,
 			'COMMA' => 11,
-			'REV' => 10,
-			'AND' => 17,
-			'OR' => 16,
-			'LPAREN' => 15,
-			'ACTION' => 7
+			'AND' => 12,
+			'TEST' => 2,
+			'OR' => 13,
+			'RPAREN' => 30,
+			'NOT' => 14,
+			'ACTION' => 6,
+			'LPAREN' => 17
 		},
-		DEFAULT => -9,
 		GOTOS => {
-			'switches_and_revs' => 30,
-			'subsequent_expr' => 12,
-			'element' => 14
+			'subsequent_expr' => 16,
+			'element' => 15
 		}
 	},
 	{#State 20
-		DEFAULT => -6
+		DEFAULT => -16
 	},
 	{#State 21
 		DEFAULT => -3
 	},
 	{#State 22
-		DEFAULT => -7
+		ACTIONS => {
+			'NOT' => 14,
+			'SWITCH' => 7,
+			'ACTION' => 6,
+			'LPAREN' => 17,
+			'AND' => 12,
+			'COMMA' => 11,
+			'OR' => 13,
+			'TEST' => 2,
+			'REV' => 3
+		},
+		DEFAULT => -9,
+		GOTOS => {
+			'element' => 15,
+			'switches_and_revs' => 31,
+			'subsequent_expr' => 16
+		}
 	},
 	{#State 23
-		DEFAULT => 0
+		DEFAULT => -7
 	},
 	{#State 24
-		ACTIONS => {
-			'NOT' => 13,
-			'RPAREN' => 31,
-			'TEST' => 3,
-			'COMMA' => 11,
-			'AND' => 17,
-			'ACTION' => 7,
-			'LPAREN' => 15,
-			'OR' => 16
-		},
-		GOTOS => {
-			'element' => 14,
-			'subsequent_expr' => 12
-		}
+		DEFAULT => -6
 	},
 	{#State 25
 		ACTIONS => {
-			'NOT' => 13,
-			'TEST' => 3,
-			'AND' => 17,
-			'LPAREN' => 15,
-			'ACTION' => 7,
-			'OR' => 16
+			'LPAREN' => 17,
+			'ACTION' => 6,
+			'NOT' => 14,
+			'OR' => 13,
+			'TEST' => 2,
+			'AND' => 12
 		},
 		DEFAULT => -12,
 		GOTOS => {
-			'subsequent_expr' => 12,
-			'element' => 14
+			'subsequent_expr' => 16,
+			'element' => 15
 		}
 	},
 	{#State 26
-		DEFAULT => -19
-	},
-	{#State 27
 		ACTIONS => {
-			'OR' => 16,
-			'LPAREN' => 15,
-			'ACTION' => 7,
-			'AND' => 17,
-			'COMMA' => 11,
-			'TEST' => 3,
-			'RPAREN' => 32,
-			'NOT' => 13
-		},
-		GOTOS => {
-			'subsequent_expr' => 12,
-			'element' => 14
-		}
-	},
-	{#State 28
-		ACTIONS => {
-			'TEST' => 3,
-			'NOT' => 13,
-			'ACTION' => 7,
-			'LPAREN' => 15,
-			'AND' => 17
-		},
-		DEFAULT => -13,
-		GOTOS => {
-			'element' => 14,
-			'subsequent_expr' => 12
-		}
-	},
-	{#State 29
-		ACTIONS => {
-			'NOT' => 13,
-			'TEST' => 3,
-			'LPAREN' => 15,
-			'ACTION' => 7
+			'LPAREN' => 17,
+			'ACTION' => 6,
+			'NOT' => 14,
+			'TEST' => 2
 		},
 		DEFAULT => -15,
 		GOTOS => {
-			'element' => 14,
-			'subsequent_expr' => 12
+			'subsequent_expr' => 16,
+			'element' => 15
+		}
+	},
+	{#State 27
+		ACTIONS => {
+			'AND' => 12,
+			'TEST' => 2,
+			'NOT' => 14,
+			'ACTION' => 6,
+			'LPAREN' => 17
+		},
+		DEFAULT => -13,
+		GOTOS => {
+			'element' => 15,
+			'subsequent_expr' => 16
+		}
+	},
+	{#State 28
+		DEFAULT => -19
+	},
+	{#State 29
+		ACTIONS => {
+			'OR' => 13,
+			'RPAREN' => 32,
+			'TEST' => 2,
+			'AND' => 12,
+			'COMMA' => 11,
+			'ACTION' => 6,
+			'LPAREN' => 17,
+			'NOT' => 14
+		},
+		GOTOS => {
+			'element' => 15,
+			'subsequent_expr' => 16
 		}
 	},
 	{#State 30
-		ACTIONS => {
-			'REV' => 22,
-			'SWITCH' => 20
-		},
-		DEFAULT => -10
+		DEFAULT => -17
 	},
 	{#State 31
-		DEFAULT => -17
+		ACTIONS => {
+			'REV' => 23,
+			'SWITCH' => 24
+		},
+		DEFAULT => -10
 	},
 	{#State 32
 		DEFAULT => -20
@@ -774,7 +774,14 @@ sub _next_token {
             return @retval if @retval;
 
             @retval = _consume_rev($lrArgv);
-            return @retval if @retval;
+            if(@retval) {   # _consume_rev always gives us two elements
+                if($retval[1] eq ']]') {
+                    $parser->YYData->{SAW_RR} ||= true;
+                } else {
+                    $parser->YYData->{SAW_NON_RR} ||= true;
+                }
+                return @retval;
+            }
 
             die "I don't understand argument '$lrArgv->[0]' before --";
 
@@ -800,7 +807,14 @@ sub _next_token {
 
         # Last of all, revs.
         @retval = _consume_rev($lrArgv);
-        return @retval if @retval;
+        if(@retval) {   # _consume_rev always gives us two elements
+            if($retval[1] eq ']]') {
+                $parser->YYData->{SAW_RR} ||= true;
+            } else {
+                $parser->YYData->{SAW_NON_RR} ||= true;
+            }
+            return @retval;
+        }
 
         die "I don't understand argument $lrArgv->[0]";
     }
@@ -830,6 +844,8 @@ Parse arguments.  Usage:
 
     my $hrArgs = App::GitFind::cmdline::Parse(\@ARGV);
 
+Modifies the C<@ARGV> array.
+
 =cut
 
 sub Parse {
@@ -838,19 +854,30 @@ sub Parse {
     my $parser = __PACKAGE__->new;
     my $hrData = $parser->YYData;
 
+    # Data we use while parsing
     $hrData->{HAS_DASH_DASH} = !!(scalar grep { $_ eq '--' } @$lrArgv);
     $hrData->{ONLY_EXPRESSIONS} = false;    # true once we hit '--'
     $hrData->{ARGV} = $lrArgv;
+
+    # Data we determine while parsing and return to the caller
 
     # Keep track of whether an action other than -prune has been seen.
     # If not, -print is added automatically.
     $hrData->{SAW_NON_PRUNE_ACTION} = false;
 
+    # Keep track of the types of rev we've seen (]] or non-]])
+    $hrData->{SAW_RR} = false;
+    $hrData->{SAW_NON_RR} = false;
+
     my $hrRetval = $parser->YYParse(yylex => \&_next_token,
         yyerror => \&_report_error,
         (@_ ? (yydebug => $_[0]) : ()),
     );
+
+    # Add non-AST data to the retval
     $hrRetval->{saw_nonprune_action} = $hrData->{SAW_NON_PRUNE_ACTION} if $hrRetval;
+    $hrRetval->{saw_rr} = $hrData->{SAW_RR};
+    $hrRetval->{saw_non_rr} = $hrData->{SAW_NON_RR};
     return $hrRetval;
 } #Parse()
 

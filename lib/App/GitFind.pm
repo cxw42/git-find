@@ -4,11 +4,21 @@ use 5.010;
 use strict;
 use warnings;
 
-use parent 'App::GitFind::Class';
-use Class::Tiny qw(argv _expr _revs _repo _repotop _searchbase
-    _scan_submodules);
-
 use App::GitFind::Base;
+
+use parent 'App::GitFind::Class';
+use Class::Tiny _qwc <<'EOT';
+    argv    # the args we parse
+    _expr   # the expression (AST from parsing)
+    _revs   # the revs in the search scope, or ']]' for filesystem
+    _repo   # The Git::Raw::Repository of the superproject we are in
+    _repotop            # The working directory of _repo.  Path::Class::Dir.
+    _searchbase         # Path::Class::Dir with respect to which results
+                        # are reported.
+    _searcher           # App::GitFind::Searcher subclass that finds entries
+    _scan_submodules    # If truthy, scan submodules.
+EOT
+
 use App::GitFind::cmdline;
 use App::GitFind::FileProcessor;
 use Getopt::Long 2.34 ();
@@ -41,6 +51,12 @@ from Perl code:
 
 # }}}1
 
+# Later items:
+# TODO add an option to report absolute paths instead of relative
+# TODO skip .git and .gitignored files unless -u
+# TODO optimization: if possible, add a filter function
+#       (e.g., for a top-level -type filter)
+
 =head2 BUILD
 
 Process the arguments.  Usage:
@@ -54,8 +70,9 @@ May modify the provided array.  May C<exit()>, e.g., on C<--help>.
 sub BUILD {
     my ($self, $hrArgs) = @_;
     croak "Need a -argv arrayref" unless ref $hrArgs->{argv} eq 'ARRAY';
-    my $details = _process_options($hrArgs->{argv});
     croak "Need a -searchbase" unless defined $hrArgs->{searchbase};
+
+    my $details = _process_options($hrArgs->{argv});
 
     # Handle default -print
     if(!$details->{expr}) {             # Default: -print
@@ -69,9 +86,18 @@ sub BUILD {
     }
 
     # Add default for missing revs
-    $details->{revs} = [undef] unless $details->{revs};
+    unless($details->{revs}) {
+        $details->{revs} = [undef];
+        $details->{saw_non_rr} ||= true;
+    }
+    $details->{revs} = [List::SomeUtils::uniq @{$details->{revs}}];
 
     vlog { "Options:", ddc $details } 2;
+
+    # Check the scope.  TODO permit searching both ]] and non-]] in one run
+    if($details->{saw_rr} && $details->{saw_non_rr}) {
+        die "I don't know how to search both ']]' and a Git rev at once."
+    }
 
     # Copy information into our instance fields
     $self->_expr($details->{expr});
@@ -80,15 +106,9 @@ sub BUILD {
 
     $self->_find_repo;
 
-    # Should we scan submodules?
-    $self->_scan_submodules(true);  # Yes, by default
-    $self->_scan_submodules(false)  # No, if ]] is the only ref
-        if @{$self->_revs} == 1 && defined $self->_revs->[0] &&
-            $self->_revs->[0] eq ']]';
-
 } #BUILD()
 
-# Initialize _repo and _repotop
+# Initialize _repo and _repotop.  Dies on error.
 sub _find_repo {
     my $self = shift;
     # Find the repo we're in.  If we're in a submodule, that will be the
@@ -123,18 +143,18 @@ Does the work.  Call as C<< exit($obj->run()) >>.  Returns a shell exit code.
 sub run {
     my $self = shift;
     my $runner = App::GitFind::FileProcessor->new(-expr => $self->_expr);
+    my $callback = $runner->callback($VERBOSE>=3);
 
     if($VERBOSE) {
         STDOUT->autoflush(true);
         STDERR->autoflush(true);
     }
 
-    my $iter = $self->_entry_iterator($self->_repo);
-
-    while (defined(my $entry = $iter->next)) {
-        vlog { $entry->path, '>>>' } 3;
-        my $matched = $runner->process($entry);
-        vlog { '<<<', $matched ? 'matched' : 'did not match' } 3;
+    for my $rev (@{$self->_revs}) {
+        my $searcher = $self->_make_searcher($rev, $self->_repo);
+        # TODO? deduplicate?
+        $searcher->run($callback);
+        # TODO? early stop?
     }
 
     return 0;   # TODO? return 1 if any -exec failed?
@@ -142,64 +162,16 @@ sub run {
 
 =head1 INTERNALS
 
-=head2 _entry_iterator
+=head2 _make_searcher
 
 Create an iterator for the entries to be processed.  Returns an
-L<Iterator::Simple>.  Usage:
+L<App::GitFind::Searcher>.  Usage:
 
-    my $iter = $self->_entry_iterator($repo);
-
-=cut
-
-sub _entry_iterator {
-    my ($self, $repo) = @_;
-
-    # Make iterators for the requested revs with respect to $repo
-    my @iters =
-        map { $self->_iterator_for(-rev => $_, -in => $repo) }
-            List::SomeUtils::uniq @{$self->_revs};
-
-    if($self->_scan_submodules) {
-        # Does $repo have submodules? (EXPERIMENTAL)
-        my @submodule_names;
-        Git::Raw::Submodule->foreach($repo, sub { push @submodule_names, $_[0]; });
-        vlog { "Submodules:", join ', ', @submodule_names } if @submodule_names;
-
-        # Make iterators for the submodules.  Don't start on a submodule
-        # until we've finished with the top level.
-        if(@submodule_names) {
-            my $name_iter = iter([@submodule_names]);
-
-            my $subrepo_iter =
-                imap {
-                    vlog { "Entering submodule", $_ } 2;
-                    my $smrepo = Git::Raw::Submodule->lookup($repo, $_);
-                    unless($smrepo) {
-                        vwarn { "Could not load submodule $_" };
-                        return undef;
-                    }
-                    return $self->_entry_iterator($smrepo->open)
-                }
-                $name_iter;
-
-            my $submodule_iter = igrep { !!$_ } $subrepo_iter;
-
-            push @iters, $submodule_iter;
-        }
-    }
-
-    return iflatten ichain @iters;
-} #_entry_iterator
-
-=head2 _iterator_for
-
-Return an iterator for a particular rev in a particular repository.  Usage:
-
-    my $iterator = $self->_iterator_for('rev', -in => $repo);
+    my $searcher = $self->_make_searcher('rev', -in => $repo);
 
 =cut
 
-sub _iterator_for {
+sub _make_searcher {
     my ($self, %args) = getparameters('self', [qw(rev in)], @_);
     my $rev = $args{rev};
     my $repo = $args{in};
@@ -207,48 +179,24 @@ sub _iterator_for {
     # TODO find files in scope $self->_revs, repo $repo
 
     if(!defined $rev) {     # The index of the current repo
-        require App::GitFind::Entry::GitIndex;
-        my $index = $repo->index;
-        return imap {
-            App::GitFind::Entry::GitIndex->new(-obj=>$_, -repo=>$repo,
-                -searchbase=>$self->_searchbase)
-        } iter([$index->entries]);
-
-    } elsif($rev eq 'DEBUG') {   # DEBUG
-        require App::GitFind::Entry::PathClass;
-        return iter([
-            App::GitFind::Entry::PathClass->new(-obj=>file('./TEST!!'),
-                -searchbase=>$self->_searchbase)
-        ]);
+        require App::GitFind::Searcher::Git;
+        return App::GitFind::Searcher::Git->new(
+            -repo => $repo,
+            -searchbase=>$self->_searchbase
+        );
 
     } elsif($rev eq ']]') { # The current working directory
-        require File::Find::Object;
-        require App::GitFind::Entry::OnDisk;
-        my $findbase =
-            dir($repo->workdir)->relative($self->_searchbase);
-        my $base_iter = File::Find::Object->new(
-            {followlink=>true}, $findbase
+        require App::GitFind::Searcher::FileSystem;
+        return App::GitFind::Searcher::FileSystem->new(
+            -repo => $repo,
+            -searchbase=>$self->_searchbase
         );
-        return  igrep { $_ }
-                imap { App::GitFind::Entry::OnDisk->new(-obj=>$_,
-                                            -searchbase=>$self->_searchbase,
-                                            -findbase=>$findbase)
-                }
-                iterator { $base_iter->next_obj };
-                # Separate iterator and imap so imap won't be called once
-                # next_obj returns undef.
-
-            # Later items:
-            # TODO add an option to report absolute paths instead of relative
-            # TODO skip .git and .gitignored files unless -u
-            # TODO optimization: if possible, add a filter function
-            #       (e.g., for a top-level -type filter)
 
     } else {
         die "I don't yet know how to search through rev $_";
     }
 
-} #_iterator_for
+} #_make_searcher
 
 =head2 _process_options
 

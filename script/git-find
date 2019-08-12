@@ -36,9 +36,7 @@ Verbosity (-v); Warnings (-W).
 
 =item Revs:
 
-Anything accepted by git-rev-parse(1).  Note that the rev C<DEBUG> is
-currently special-cased to a test item.  This special case will be
-removed in the future.
+Anything accepted by git-rev-parse(1).
 
 A git B<ref> (under C<.git/refs/>) is also a B<rev> in the sense of
 git-rev-parse(1) and gitrevisions(7).  The terms "ref" and "rev" are used
