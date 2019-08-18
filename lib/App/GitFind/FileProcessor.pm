@@ -11,11 +11,10 @@ use Class::Tiny qw(expr searchbase);
 
 # Imports
 use App::GitFind::Base;
-use App::GitFind::Actions qw(argdetails);
-use App::GitFind::FileStatLs ();
+#use App::GitFind::Actions qw(argdetails);
+#use App::GitFind::FileStatLs ();
 use File::Spec;
-use Getargs::Mixed;
-use Git::Raw;
+#use Git::Raw;
 
 # === Documentation === {{{1
 
@@ -45,7 +44,7 @@ exit codes from C<-exec> and similar actions are lost.  Usage:
 =cut
 
 sub process {
-    my ($self, %args) = parameters('self',[qw(entry)], @_);
+    my ($self, %args) = getparameters('self',[qw(entry)], @_);
     @_ = ($self, $args{entry}, $self->expr);
     goto &_process;
 } #process()
@@ -152,8 +151,10 @@ AND, OR, and SEQ, only a single expression is allowed.
 
 sub process_NOT {
     my ($self, $entry, $expr) = @_;
-    croak "I can't take an array of expressions"
-        if ref $expr eq 'ARRAY';
+    if(ref $expr eq 'ARRAY') {
+        require Carp;
+        Carp::croak "I can't take an array of expressions";
+    }
 
     return !$self->_process($entry, $expr);
 } #process_NOT()
@@ -236,7 +237,11 @@ sub do_true { true }
 
 # delete
 
-sub do_ls { print App::GitFind::FileStatLs::ls_stat($_[1]->path); true } # $_[0]=self
+sub do_ls {
+    state $loaded = (require App::GitFind::FileStatLs, true);
+    print App::GitFind::FileStatLs::ls_stat($_[1]->path);
+    true
+}
     # TODO optimization?  Pull the stat() results from $_[1] rather than
     # re-statting.  May not be an issue.
 
@@ -288,7 +293,7 @@ sub do_print0 { print $_[0]->dot_relative_path($_[1]), "\0"; true }
 # fprintf file format
 
 sub do_printf { # -printf format.  No newline at the end.
-    my ($self, %args) = parameters('self',[qw(entry format)], @_);
+    my ($self, %args) = getparameters('self',[qw(entry format)], @_);
     print "printf($args{format}, $args{entry})";    # TODO
 } #do_printf()
 

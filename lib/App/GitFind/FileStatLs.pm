@@ -31,6 +31,42 @@ L<https://github.com/cxw42/File-Stat-Ls>.
   my $ls = $obj->ls_stat('/my/file/name.txt');
     # E.g., " -r-xr-xr-x 1 root other 4523 Jul 12 09:49 /my/file/name.txt"
 
+=head1 MODIFICATIONS
+
+In L</ls_stat ($fn)>:
+
+=over
+
+=item *
+
+Never take a class parameter, i.e., cannot be called as
+C<< App::GitFind::FileStatLs->ls_stat >> or
+C<< App::GitFind::FileStatLs->new->ls_stat >>.
+
+=item *
+
+Do not call C<lstat> a second time.
+
+=item *
+
+Change output format
+
+=back
+
+General:
+
+=over
+
+=item *
+
+Update documentation
+
+=item *
+
+Lazily load L<Carp>
+
+=back
+
 =head1 DESCRIPTION
 
 This class contains methods to convert stat elements into ls format.
@@ -163,8 +199,8 @@ Variables used or routines called:
 
 How to use:
 
-   my $ls = $self->ls_stat($fn);
-   my $ls = ls_stat($fn);   # only if $fn is not a reference
+   my $ls = ls_stat($fn);
+   # NOT $self->ls_stat($fn) --- not supported
 
 Return: the ls string such as one of the following:
 
@@ -177,7 +213,6 @@ The output B<includes> a trailing newline.
 =cut
 
 sub ls_stat {
-    my $s = ref($_[0]) ? shift : (App::GitFind::FileStatLs->new);
     my $fn = shift;
     my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
         $atime,$mtime,$ctime,$blksize,$blocks) = lstat $fn;
@@ -231,7 +266,7 @@ L<Net::SFTP::Attributes> object with the following elements:
 sub stat_attr {
     my $s = ref($_[0]) ? shift : (App::GitFind::FileStatLs->new);
     my ($fn,$typ) = @_;
-    croak "ERR: no file name for stat_attr.\n" if ! $fn;
+    (require Carp, Carp::croak "ERR: no file name for stat_attr.\n") if ! $fn;
     return undef if ! $fn;
     my $vs  = 'dev,ino,mode,nlink,uid,gid,rdev,size,atime,mtime,';
        $vs .= 'ctime,blksize,blocks';

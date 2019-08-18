@@ -6,20 +6,22 @@ use warnings;
 
 our $VERSION = '0.000001';
 
-use parent 'Exporter';
-use vars::i [ '$VERBOSE' => 0, '$QUIET' => 0 ];
-use vars::i '@EXPORT' => qw(true false
-                            getparameters *QUIET _qwc *VERBOSE vlog vwarn);
+use parent 'Exporter';  # TODO use Exporter::Tidy instead?
+use vars::i [
+    '$VERBOSE' => 0,
+    '$QUIET' => 0,
+    '@EXPORT' => [qw(true false
+                    ddc getparameters *QUIET _qwc *VERBOSE vlog vwarn)],
+];
 
-use Import::Into;
+#use Import::Into;
 
-use constant true => !!1;
-use constant false => !!0;
+use constant { true => !!1, false => !!0 };
 
 # Re-exports
-use Carp qw(confess);
-use Data::Dumper::Compact ();
-use Getargs::Mixed;
+#use Carp qw(confess);
+#use Data::Dumper::Compact ();
+#use Getargs::Mixed;
 
 # === Documentation === {{{1
 
@@ -82,18 +84,34 @@ C<-undef_ok> set.
 
 =cut
 
-my $GM = Getargs::Mixed->new(-undef_ok => true);
 
 sub getparameters {
+    state $GM = (require Getargs::Mixed, Getargs::Mixed->new(-undef_ok => true));
+
     unshift @_, $GM;
     goto &Getargs::Mixed::parameters;
 } #getparameters()
+
+=head2 ddc
+
+L<Data::Dumper::Compact/ddc>, but lazily loads C<Data::Dumper::Compact>.
+
+=cut
+
+sub ddc {
+    state $dumpcb = (require Data::Dumper::Compact, Data::Dumper::Compact->new->dump_cb);
+    goto &$dumpcb;
+}
+
+# TODO a lazily-loaded croak()?
 
 =head2 vlog
 
 Log information to STDERR if L</$VERBOSE> is set.  Usage:
 
-    vlog { <list of things to log> } [optional min verbosity level (default 1)];
+    vlog { <list of things to log> }
+        [optional min verbosity level (default 1)]
+        [, log-routine args];
 
 The items in the list are joined by C<' '> on output, and a C<'\n'> is added.
 Each line is prefixed with C<'# '> for the benefit of test runs.
@@ -112,13 +130,22 @@ verbosity level (1 by default).
 If C<< $VERBOSE >= 4 >>, the filename and line from which vlog was called
 will also be printed.
 
+If more arguments are provided than two, the extras are the arguments
+to the subroutine.  This permits you to pass arguments from the caller's
+C<@_> that would otherwise be shadowed inside the logging routine.  E.g.:
+
+    sub foo {
+        vlog { $_[0] } 1, $_[1];    # log foo's $_[1]
+    }
+
 =cut
 
-sub vlog (&;$) {
+sub vlog (&;@) {
     return if $QUIET;
-    return unless $VERBOSE >= ($_[1] // 1);
+    my ($crRoutine, $level) = splice @_, 0, 2;
+    return unless $VERBOSE >= ($level // 1);
 
-    my @log = &{$_[0]}();
+    my @log = $crRoutine->(@_);
     return unless @log;
 
     chomp $log[$#log] if $log[$#log];
@@ -159,11 +186,12 @@ sub import {
     my $target = caller;
     $_[0]->export_to_level(1, @_);                              # Symbols
 
-    $_->import::into($target) foreach qw(strict warnings);      # Pragmas
+    #$_->import::into($target) foreach qw(strict warnings);      # Pragmas
+        # ... each module has to import those anyway to satisfy Kwalitee.
 
-    Carp->import::into($target, qw(carp croak confess cluck));  # Packages
-    Data::Dumper::Compact->import::into($target, 'ddc');
-    Getargs::Mixed->import::into($target);
+    #Carp->import::into($target, qw(carp croak confess cluck));  # Packages
+    #Data::Dumper::Compact->import::into($target, 'ddc');
+    #Getargs::Mixed->import::into($target);
 } #import()
 
 1;
