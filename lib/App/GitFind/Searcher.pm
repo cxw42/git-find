@@ -44,8 +44,8 @@ TODO pruning, cancelling?
 =cut
 
 sub run {
-    my $self = shift or croak 'Need an instance';
-    my $callback = shift or croak 'Need a callback';
+    my $self = shift or (require Carp, Carp::croak 'Need an instance');
+    my $callback = shift or (require Carp, Carp::croak 'Need a callback');
     ...
 } #run()
 

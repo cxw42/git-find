@@ -43,16 +43,18 @@ so we don't handle that case.
 # once our BUILDARGS is called.
 
 sub _app_gitfind_class_builder_internal {
-    my $class = shift or croak 'Need a class';
+    my $class = shift or require Carp, Carp::croak 'Need a class';
 
     if(@_ == 1 && ref $_[0] eq 'HASH') {
         @_ = ($class, %{$_[0]});
         goto \&_app_gitfind_class_builder_internal;
             # No extra stack frame for the sake of croak()
     } elsif(@_ == 1 && ref $_[0]) {
-        croak "$class\->new(arg) with @{[ref $_[0]]} instead of HASH ref";
+        require Carp;
+        Carp::croak "$class\->new(arg) with @{[ref $_[0]]} instead of HASH ref";
     } elsif(@_ % 2) {
-        croak "Odd number of arguments to $class\->new()";
+        require Carp;
+        Carp::croak "Odd number of arguments to $class\->new()";
     }
 
     # Now we have key-value pairs.  Trim leading hyphens on the keys.

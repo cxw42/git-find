@@ -24,9 +24,7 @@ Quick reference:
 
 - Revs:
 
-    Anything accepted by git-rev-parse(1).  Note that the rev `DEBUG` is
-    currently special-cased to a test item.  This special case will be
-    removed in the future.
+    Anything accepted by git-rev-parse(1).
 
     A git **ref** (under `.git/refs/`) is also a **rev** in the sense of
     git-rev-parse(1) and gitrevisions(7).  The terms "ref" and "rev" are used

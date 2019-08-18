@@ -62,8 +62,11 @@ sub run {
 
 sub BUILD {
     my ($self, $hrArgs) = @_;
-    croak 'Need a -searchbase' unless $self->searchbase;
-    croak 'Need a -repo' unless $self->repo;
+    unless($self->searchbase && $self->repo) {
+        require Carp;
+        Carp::croak 'Need a -searchbase' unless $self->searchbase;
+        Carp::croak 'Need a -repo' unless $self->repo;
+    }
 } #BUILD()
 
 1;

@@ -517,7 +517,8 @@ Modifies the C<@ARGV> array.
 =cut
 
 sub Parse {
-    my $lrArgv = shift or croak 'Parse: Need an argument list';
+    my $lrArgv = shift or
+        (require Carp, Carp::croak 'Parse: Need an argument list');
 
     my $parser = __PACKAGE__->new;
     my $hrData = $parser->YYData;

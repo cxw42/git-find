@@ -23,11 +23,10 @@ use App::GitFind::cmdline;
 use App::GitFind::FileProcessor;
 use Getopt::Long 2.34 ();
 use Git::Raw;
-use Git::Raw::Submodule;
 use IO::Handle;
 use Iterator::Simple qw(ichain iflatten igrep imap iter iterator);
 use List::SomeUtils;    # uniq
-use Path::Class;
+use Path::Class;    # TODO see if we can do without Path::Class for speed
 
 our $VERSION = '0.000001';  # TRIAL
 
@@ -69,8 +68,10 @@ May modify the provided array.  May C<exit()>, e.g., on C<--help>.
 
 sub BUILD {
     my ($self, $hrArgs) = @_;
-    croak "Need a -argv arrayref" unless ref $hrArgs->{argv} eq 'ARRAY';
-    croak "Need a -searchbase" unless defined $hrArgs->{searchbase};
+    (require Carp, Carp::croak "Need a -argv arrayref")
+        unless ref $hrArgs->{argv} eq 'ARRAY';
+    (require Carp, Carp::croak "Need a -searchbase")
+        unless defined $hrArgs->{searchbase};
 
     my $details = _process_options($hrArgs->{argv});
 
