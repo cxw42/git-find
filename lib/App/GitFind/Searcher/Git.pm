@@ -55,14 +55,17 @@ sub _run {
     if($self->scan_submodules) {
         # Does $repo have submodules? (EXPERIMENTAL)
         my @submodule_names;
-        Git::Raw::Submodule->foreach($repo, sub { push @submodule_names, $_[0]; });
+        Git::Raw::Submodule->foreach($repo, sub {
+                push @submodule_names, $_[0];
+                return 0;   # Tell foreach() to keep going
+        });
         vlog { "Submodules:", join ', ', @submodule_names } if @submodule_names;
 
         # Open the submodules
         for(@submodule_names) {
             my $sm = Git::Raw::Submodule->lookup($repo, $_);
             unless($sm) {
-                vwarn { "Could not access submodule $_" };
+                vwarn { "Could not access submodule $_" };  # TODO die?
                 return undef;
             }
             $submodules{$_} = $sm;
@@ -98,10 +101,14 @@ sub _run {
 
 sub BUILD {
     my ($self, $hrArgs) = @_;
-    croak 'Need a -searchbase' unless $self->searchbase;
-    croak 'Need a -repo' unless $self->repo;
-    croak 'Repo must be a Git::Raw::Repository'
-        unless $self->repo->DOES('Git::Raw::Repository');
+    unless($self->searchbase && $self->repo &&
+        $self->repo->DOES('Git::Raw::Repository')) {
+        require Carp;
+        Carp::croak 'Need a -searchbase' unless $self->searchbase;
+        Carp::croak 'Need a -repo' unless $self->repo;
+        Carp::croak 'Repo must be a Git::Raw::Repository'
+            unless $self->repo->DOES('Git::Raw::Repository');
+    }
 } #BUILD()
 
 1;
