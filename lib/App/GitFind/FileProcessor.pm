@@ -13,7 +13,7 @@ use Class::Tiny qw(expr searchbase);
 use App::GitFind::Base;
 #use App::GitFind::Actions qw(argdetails);
 #use App::GitFind::FileStatLs ();
-use File::Spec;
+use File::Spec; # TODO use facilities from A::GF::PathClassMicro instead?
 #use Git::Raw;
 
 # === Documentation === {{{1
@@ -245,7 +245,11 @@ sub do_ls {
     # TODO optimization?  Pull the stat() results from $_[1] rather than
     # re-statting.  May not be an issue.
 
-sub do_print { say $_[0]->dot_relative_path($_[1]); true }  # $_[0] = self
+sub do_print {
+    $DB::single=1;
+    say $_[0]->dot_relative_path($_[1]);
+    true
+}
 
 sub do_print0 { print $_[0]->dot_relative_path($_[1]), "\0"; true }
 

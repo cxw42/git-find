@@ -18,7 +18,8 @@ This combines pieces of L<Path::Class::Entity>, L<Path::Class::File>, and
 L<Path::Class::Dir> by Ken Williams.  Those are licensed under the same terms
 as Perl itself.  This file is licensed under the Artistic license, and these
 modifications are believed to be permissible under clause 3(a) of the
-Artistic License.  This file is licensed under the Artistic license.
+Artistic License.  This file is available for use and modification under the
+terms of the Artistic License.
 
 B<Modifications>: This file was modified by Christopher White
 C<< <cxw@cpan.org> >> to combine files and remove functions I don't use in
@@ -29,6 +30,7 @@ Multiple packages are combined in this file.
 
 =cut
 
+# Path::Class is not included - we use the functions directly
 
 # }}}1
 ##############################################################################
@@ -41,9 +43,10 @@ use strict;
 }
 
 use File::Spec 3.26;
-use File::stat ();
+#use File::stat ();
 use Cwd;
-use Carp();
+#use Carp();
+sub croak { require Carp; goto &Carp::croak; }
 
 use overload
   (
@@ -99,7 +102,7 @@ sub cleanup {
 
 sub resolve {
   my $self = shift;
-  Carp::croak($! . " $self") unless -e $self;  # No such file or directory
+  croak($! . " $self") unless -e $self;  # No such file or directory
   my $cleaned = $self->new( scalar Cwd::realpath($self->stringify) );
 
   # realpath() always returns absolute path, kind of annoying
@@ -120,8 +123,8 @@ sub relative {
   return $self->new($self->_spec->abs2rel($self->stringify, @_));
 }
 
-sub stat  { File::stat::stat("$_[0]") }
-sub lstat { File::stat::lstat("$_[0]") }
+sub stat  { [stat("$_[0]")] }
+sub lstat { [lstat("$_[0]")] }
 
 sub PRUNE { return \&PRUNE; }
 
@@ -162,10 +165,11 @@ package App::GitFind::PathClassMicro::File;
 
 use strict;
 
-
-use App::GitFind::PathClassMicro::Dir;
-use parent qw(App::GitFind::PathClassMicro::Entity);
-use Carp;
+#use App::GitFind::PathClassMicro::Dir;
+  # In the same file and has no import() - don't need to `use` it
+use parent -norequire, qw(App::GitFind::PathClassMicro::Entity);
+#use Carp;
+sub croak { require Carp; goto &Carp::croak; }
 
 use IO::File ();
 
@@ -668,10 +672,14 @@ the C<remove()> method handles this process for you.
 Invokes C<< File::stat::stat() >> on this file and returns a
 L<File::stat> object representing the result.
 
+MODIFIED: returns an arrayref of C<stat()> results.
+
 =item $st = $file->lstat()
 
 Same as C<stat()>, but if C<$file> is a symbolic link, C<lstat()>
 stats the link instead of the file the link points to.
+
+MODIFIED: returns an arrayref of C<lstat()> results.
 
 =item $class = $file->dir_class()
 
@@ -706,7 +714,6 @@ L<Path::Class>, L<Path::Class::Dir>, L<File::Spec>
 ##############################################################################
 # Dir {{{1
 
-
 package App::GitFind::PathClassMicro::Dir;
 {
   $App::GitFind::PathClassMicro::Dir::VERSION = '0.37';
@@ -714,13 +721,15 @@ package App::GitFind::PathClassMicro::Dir;
 
 use strict;
 
-use App::GitFind::PathClassMicro::File;
-use Carp();
-use parent qw(App::GitFind::PathClassMicro::Entity);
+#use App::GitFind::PathClassMicro::File;
+  # In the same file and has no import() - don't need to `use` it
+#use Carp();
+sub croak { require Carp; goto &Carp::croak; }
+use parent -norequire, qw(App::GitFind::PathClassMicro::Entity);
 
-use IO::Dir ();
-use File::Path ();
-use File::Temp ();
+#use IO::Dir ();
+#use File::Path ();
+#use File::Temp ();
 use Scalar::Util ();
 
 # updir & curdir on the local machine, for screening them out in
@@ -859,9 +868,9 @@ sub relative {
   return $self->new( length $rel ? $rel : $self->_spec->curdir );
 }
 
-sub open  { IO::Dir->new(@_) }
-sub mkpath { File::Path::mkpath(shift()->stringify, @_) }
-sub rmtree { File::Path::rmtree(shift()->stringify, @_) }
+#sub open  { IO::Dir->new(@_) }
+#sub mkpath { File::Path::mkpath(shift()->stringify, @_) }
+#sub rmtree { File::Path::rmtree(shift()->stringify, @_) }
 
 sub remove {
   rmdir( shift() );
@@ -898,7 +907,7 @@ sub recurse {
   my %opts = (preorder => 1, depthfirst => 0, @_);
 
   my $callback = $opts{callback}
-    or Carp::croak( "Must provide a 'callback' parameter to recurse()" );
+    or croak( "Must provide a 'callback' parameter to recurse()" );
 
   my @queue = ($self);
 
@@ -940,7 +949,7 @@ sub recurse {
 sub children {
   my ($self, %opts) = @_;
 
-  my $dh = $self->open or Carp::croak( "Can't open directory $self: $!" );
+  my $dh = $self->open or croak( "Can't open directory $self: $!" );
 
   my @out;
   while (defined(my $entry = $dh->read)) {
@@ -962,7 +971,7 @@ sub _is_local_dot_dir {
 sub next {
   my $self = shift;
   unless ($self->{dh}) {
-    $self->{dh} = $self->open or Carp::croak( "Can't open directory $self: $!" );
+    $self->{dh} = $self->open or croak( "Can't open directory $self: $!" );
   }
 
   my $next = $self->{dh}->read;
@@ -979,9 +988,9 @@ sub next {
 }
 
 sub subsumes {
-  Carp::croak "Too many arguments given to subsumes()" if $#_ > 2;
+  croak "Too many arguments given to subsumes()" if $#_ > 2;
   my ($self, $other) = @_;
-  Carp::croak( "No second entity given to subsumes()" ) unless defined $other;
+  croak( "No second entity given to subsumes()" ) unless defined $other;
 
   $other = $self->new($other) unless eval{$other->isa( "App::GitFind::PathClassMicro::Entity")};
   $other = $other->dir unless $other->is_dir;
@@ -1018,9 +1027,9 @@ sub subsumes {
 }
 
 sub contains {
-  Carp::croak "Too many arguments given to contains()" if $#_ > 2;
+  croak "Too many arguments given to contains()" if $#_ > 2;
   my ($self, $other) = @_;
-  Carp::croak "No second entity given to contains()" unless defined $other;
+  croak "No second entity given to contains()" unless defined $other;
   return unless -d $self and (-e $other or -l $other);
 
   # We're going to resolve the path, and don't want side effects on the objects
@@ -1031,10 +1040,14 @@ sub contains {
   return $self->subsumes($other);
 }
 
+=for comment
+
 sub tempfile {
   my $self = shift;
   return File::Temp::tempfile(@_, DIR => $self->stringify);
 }
+
+=cut
 
 1;
 # End of App::GitFind::PathClassMicro::Dir
@@ -1363,18 +1376,18 @@ returns the basename string, so this method lets someone call
 C<components()> without caring whether the object is a file or a
 directory.
 
-=item $fh = $dir->open()
+=item (REMOVED) $fh = $dir->open()
 
 Passes C<$dir> to C<< IO::Dir->open >> and returns the result as an
 L<IO::Dir> object.  If the opening fails, C<undef> is returned and
 C<$!> is set.
 
-=item $dir->mkpath($verbose, $mode)
+=item (REMOVED) $dir->mkpath($verbose, $mode)
 
 Passes all arguments, including C<$dir>, to C<< File::Path::mkpath()
 >> and returns the result (a list of all directories created).
 
-=item $dir->rmtree($verbose, $cautious)
+=item (REMOVED) $dir->rmtree($verbose, $cautious)
 
 Passes all arguments, including C<$dir>, to C<< File::Path::rmtree()
 >> and returns the result (the number of files successfully deleted).
@@ -1386,7 +1399,7 @@ indicating whether or not the directory was successfully removed.
 This method is mainly provided for consistency with
 C<App::GitFind::PathClassMicro::File>'s C<remove()> method.
 
-=item $dir->tempfile(...)
+=item (REMOVED) $dir->tempfile(...)
 
 An interface to L<File::Temp>'s C<tempfile()> function.  Just like
 that function, if you call this in a scalar context, the return value
@@ -1532,10 +1545,14 @@ has no effect.
 Invokes C<< File::stat::stat() >> on this directory and returns a
 C<File::stat> object representing the result.
 
+MODIFIED: returns an arrayref of C<stat()> results.
+
 =item $st = $file->lstat()
 
 Same as C<stat()>, but if C<$file> is a symbolic link, C<lstat()>
 stats the link instead of the directory the link points to.
+
+MODIFIED: returns an arrayref of C<lstat()> results.
 
 =item $class = $file->file_class()
 

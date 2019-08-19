@@ -5,7 +5,8 @@ use 5.010;
 use strict;
 use warnings;
 use App::GitFind::Base;
-use Path::Class;
+#use Path::Class;
+use App::GitFind::PathClassMicro;
 
 our $VERSION = '0.000001'; # TRIAL
 
@@ -18,8 +19,8 @@ use Class::Tiny _qwc <<'EOT';
 EOT
 
 use Class::Tiny::Immutable {
-    # Lazy cache of a Path::Class instance for this path
-    '_pathclass' => sub { file($_[0]->repo->workdir, $_[0]->obj->path) },
+    # Lazy cache of an App::GitFind::PathClassMicro::File instance for this path
+    '_pathclass' => sub { App::GitFind::PathClassMicro::File->new($_[0]->repo->workdir, $_[0]->obj->path) },
 
     '_lstat' => sub { [$_[0]->_pathclass->lstat()] },
 

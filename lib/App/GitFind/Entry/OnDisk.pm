@@ -5,7 +5,8 @@ use 5.010;
 use strict;
 use warnings;
 use App::GitFind::Base;
-use Path::Class;
+#use Path::Class;
+use App::GitFind::PathClassMicro;
 
 our $VERSION = '0.000001'; # TRIAL
 
@@ -19,11 +20,13 @@ use Class::Tiny
 use Class::Tiny::Immutable {
     _lstat => sub { $_[0]->obj->stat_ret },
 
-    # Lazy Path::Class
+    # Lazy App::GitFind::PathClassMicro;
     _pathclass => sub {
-        $_[0]->isdir
-            ? dir($_[0]->findbase, @{$_[0]->obj->full_components})
-            : file($_[0]->findbase, @{$_[0]->obj->full_components})
+        ($_[0]->isdir   ? 'App::GitFind::PathClassMicro::Dir'
+                        : 'App::GitFind::PathClassMicro::File'
+        )->new(
+            $_[0]->findbase, @{$_[0]->obj->full_components}
+        )
     },
 
     isdir => sub { $_[0]->obj->is_dir },

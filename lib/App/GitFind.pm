@@ -25,8 +25,8 @@ use Getopt::Long 2.34 ();
 use Git::Raw;
 use IO::Handle;
 use Iterator::Simple qw(ichain iflatten igrep imap iter iterator);
-use List::SomeUtils;    # uniq
-use Path::Class;    # TODO see if we can do without Path::Class for speed
+#use Path::Class;   # TODO see if we can do without Path::Class for speed
+use App::GitFind::PathClassMicro;
 
 our $VERSION = '0.000001';  # TRIAL
 
@@ -68,10 +68,8 @@ May modify the provided array.  May C<exit()>, e.g., on C<--help>.
 
 sub BUILD {
     my ($self, $hrArgs) = @_;
-    (require Carp, Carp::croak "Need a -argv arrayref")
-        unless ref $hrArgs->{argv} eq 'ARRAY';
-    (require Carp, Carp::croak "Need a -searchbase")
-        unless defined $hrArgs->{searchbase};
+    croak "Need a -argv arrayref" unless ref $hrArgs->{argv} eq 'ARRAY';
+    croak "Need a -searchbase" unless defined $hrArgs->{searchbase};
 
     my $details = _process_options($hrArgs->{argv});
 
@@ -91,7 +89,10 @@ sub BUILD {
         $details->{revs} = [undef];
         $details->{saw_non_rr} ||= true;
     }
-    $details->{revs} = [List::SomeUtils::uniq @{$details->{revs}}];
+    if(@{$details->{revs}} > 1) {
+        require List::SomeUtils;
+        $details->{revs} = [List::SomeUtils::uniq(@{$details->{revs}})];
+    }
 
     vlog { "Options:", ddc $details } 2;
 
@@ -103,7 +104,9 @@ sub BUILD {
     # Copy information into our instance fields
     $self->_expr($details->{expr});
     $self->_revs($details->{revs});
-    $self->_searchbase(dir($hrArgs->{searchbase}));
+    $self->_searchbase(
+        App::GitFind::PathClassMicro::Dir->new($hrArgs->{searchbase})
+    );
 
     $self->_find_repo;
 
@@ -118,7 +121,8 @@ sub _find_repo {
     die "Not in a Git repository: $@\n" if $@;
     $self->_repo($repo);
 
-    $self->_repotop( dir($self->_repo->workdir) );  # $repo->path is .git/
+    $self->_repotop( App::GitFind::PathClassMicro::Dir->new($self->_repo->workdir) );
+        # $repo->path is .git/
     vlog {
         "Repository:", $self->_repo->path,
         "\nWorking dir:", $self->_repotop,

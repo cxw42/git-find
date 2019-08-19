@@ -241,6 +241,11 @@ my %opts = (
         #'overload' => '0',
 
         'Path::Class' => '0.37',
+            # NOTE: we no longer use Path::Class directly - we have our
+            # own version in App::GitFind::PathClassMicro.  However,
+            # listing Path::Class here means we will always have the correct
+            # dependencies for that rolled-in version.
+
         'Pod::Usage' => '0',
         'POSIX' => '0',
         # 'Probe::Perl' => '0', # For perl interpreter file location or other info.

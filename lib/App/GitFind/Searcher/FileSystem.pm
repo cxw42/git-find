@@ -13,7 +13,8 @@ use Class::Tiny qw(repo searchbase);
 use App::GitFind::Base;
 use App::GitFind::Entry::OnDisk;
 use File::Find::Object;
-use Path::Class;
+#use Path::Class;
+use App::GitFind::PathClassMicro;
 
 # Docs {{{1
 
@@ -41,7 +42,7 @@ sub run {
     my ($self, $callback) = @_;
 
     my $findbase =
-        dir($self->repo->workdir)->relative($self->searchbase);
+        App::GitFind::PathClassMicro::Dir->new($self->repo->workdir)->relative($self->searchbase);
     my $base_iter = File::Find::Object->new(
         {followlink=>true}, $findbase
     );

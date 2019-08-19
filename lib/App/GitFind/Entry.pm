@@ -114,12 +114,12 @@ Enforce abstractness, and the requirement to provide a C<searchbase>.
 
 sub BUILD {
     my $self = shift;
-    die "Cannot instantiate abstract base class" if ref $self eq __PACKAGE__;
+    croak "Cannot instantiate abstract base class" if ref $self eq __PACKAGE__;
 
-    die "Usage: @{[ref $self]}->new(-searchbase=>...)"
+    croak "Usage: @{[ref $self]}->new(-searchbase=>...)"
         unless $self->searchbase;
-    die "-searchbase must be a Path::Class::Dir"
-        unless $self->searchbase->DOES('Path::Class::Dir');
+    croak "-searchbase must be a App::GitFind::PathClassMicro::Dir"
+        unless $self->searchbase->DOES('App::GitFind::PathClassMicro::Dir');
 } #BUILD()
 
 1;
