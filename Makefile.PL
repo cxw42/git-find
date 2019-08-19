@@ -291,6 +291,7 @@ my %opts = (
                 },
                 suggests => {
                     'Devel::Cover' => '0',
+                    'ylib' => '0.003',  # for `PERL5OPT=-Mylib prove -l`
                 },
             },
         },
