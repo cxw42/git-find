@@ -15,7 +15,7 @@ use strict;
 use warnings;
 
 use App::GitFind::Base;
-use App::GitFind::Actions ();
+use App::GitFind::Actions;
 use Hash::Merge;
 
 # }}}1
@@ -323,11 +323,16 @@ sub _consume_expression_element {
         my $arg = $1;
         my %opts = %{App::GitFind::Actions::argdetails($arg)};
 
+        # Save any non-parser information from the argdetails to be
+        # returned as part of the semantic value.
+        my %extras = %opts;
+        delete @extras{qw(token nparam)};
+
         # No-argument tests or actions
         unless($opts{nparam}>0) {
             #say STDERR "#   - No parameters";
             shift @$lrArgv;
-            return ($opts{token} => { name => $arg })
+            return ($opts{token} => { name => $arg, %extras })
         }
 
         # Consume additional arguments up to a regexp
@@ -359,7 +364,8 @@ sub _consume_expression_element {
 
         @retval = ($opts{token} => {
                         name => $arg,
-                        params => [ @{$lrArgv}[1..$opts{nparam}] ]
+                        params => [ @{$lrArgv}[1..$opts{nparam}] ],
+                        %extras,
                     });
         splice @$lrArgv, 0, $opts{nparam}+1;
         return @retval;

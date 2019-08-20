@@ -31,6 +31,8 @@ TODO
 # }}}1
 # Definitions of supported command-line arguments {{{1
 
+# NOTE: import() also adds data to these hashrefs.
+
 # Helpers for defining these
 sub _a { ($_[0] => { token => 'ACTION', nparam => ($_[1]||0) }) }
 sub _t { ($_[0] => { token => 'TEST', nparam => ($_[1]||0), index => ($_[2]||false) }) }
@@ -42,6 +44,7 @@ sub _t { ($_[0] => { token => 'TEST', nparam => ($_[1]||0), index => ($_[2]||fal
 #           - if an integer, the argument takes that many parameters (>=0).
 #   index:  (for tests only) Whether that test can be evaluated using only
 #           information from the index
+#   code:   A coderef --- the do_*() function that implements that test.
 
 my %ARGS=(
     # TODO find(1) positional options, global options?
@@ -146,23 +149,19 @@ EOT
 # otherwise.  Validators take the command and the located parameters
 # in @_.
 
-$ARGS{exec}->{validator} = sub {
+sub _validate_exec {
     return "need at least a command name" unless $#_>1;
     if($_[$#_] eq '+') {
         return "need a {}" unless grep { $_ eq '{}' } @_;
         return "{} can't be the first argument to $_[0]" if $_[1] eq '{}';
     }
     return undef;
-};
+}
 
-$ARGS{execdir}->{validator} = $ARGS{exec}->{validator};
-
-$ARGS{ok}->{validator} = sub {
+sub _validate_ok {
     return "need at least a command name" unless $#_>1;
     return undef;
-};
-
-$ARGS{okdir}->{validator} = $ARGS{ok}->{validator};
+}
 
 # }}}1
 # === Accessors for argument information === {{{1
@@ -191,6 +190,129 @@ Returns a hashref of details about the arg, or undef.  Example:
 sub argdetails {
     return $ARGS{$_[0]//''};
 }
+
+# }}}1
+# === Tests/actions === {{{1
+# The order matches that in App::GitFind::Actions
+
+# No-argument tests {{{2
+
+# empty
+# executable
+
+sub do_false { false }
+
+# nogroup
+# nouser
+# readable
+
+sub do_true { true }
+
+# writeable
+
+# }}}2
+# No-argument actions {{{2
+
+# delete
+
+sub do_ls {
+    state $loaded = (require App::GitFind::FileStatLs, true);
+    print App::GitFind::FileStatLs::ls_stat($_[1]->path);
+    true
+}
+    # TODO optimization?  Pull the stat() results from $_[1] rather than
+    # re-statting.  May not be an issue.
+
+sub do_print {
+    say $_[0]->dot_relative_path($_[1]);
+    true
+}
+
+sub do_print0 { print $_[0]->dot_relative_path($_[1]), "\0"; true }
+
+# prune
+
+# quit
+# This appears to be a GNU extension.  It should:
+#   - Finish any child processes
+#       (empirical): do not kill -9 ---
+#       find . -name LICENSE -exec sh -c 'sleep 2' {} + -o -name README -quit
+#       does not terminate the `sleep` early.
+#   - Run any queued -execdir {} + commands
+#   - (empirical) Do not run any queued -exec {} + commands?
+#       E.g., GNU
+#           find . \( -name LICENSE -quit -o -name README \) -exec ls -l {} +
+#       prints nothing.  However, POSIX
+#       (http://pubs.opengroup.org/onlinepubs/9699919799/utilities/find.html)
+#       says that "The utility ... shall be invoked ... after the last
+#       pathname in the set is aggregated, and shall be completed
+#       **before the find utility exits**" (emphasis added).
+
+
+# }}}2
+# One-argument index tests
+# TODO
+
+# }}}2
+# One-argument detailed tests
+# TODO
+
+# }}}2
+# -newerXY forms (all are one-argument detailed tests)
+# TODO
+
+# }}}2
+# -newerXY forms (all are one-argument detailed tests)
+# TODO
+
+# }}}2
+# Actions with a fixed number of arguments
+
+# fls file
+# fprint file
+# fprint0 file
+# fprintf file format
+
+sub do_printf { # -printf format.  No newline at the end.
+    my ($self, %args) = getparameters('self',[qw(entry format)], @_);
+    print "printf($args{format}, $args{entry})";    # TODO
+} #do_printf()
+
+# }}}2
+# Actions with a delimited argument list
+
+# exec
+# execdir
+# ok
+# okdir
+
+# }}}2
+
+# }}}1
+
+# === Import === {{{1
+sub import {
+    state $inflated = false;
+    my $package = $_[0];
+    $package->export_to_level(1, @_);
+
+    if(!$inflated) {
+        $inflated = true;
+
+        # Hook the validators into %ARGS
+        $ARGS{exec}->{validator} = \&_validate_exec;
+        $ARGS{execdir}->{validator} = $ARGS{exec}->{validator};
+        $ARGS{ok}->{validator} = \&_validate_ok;
+        $ARGS{okdir}->{validator} = $ARGS{ok}->{validator};
+
+        # Hook the actions into %ARGS
+        while (my ($key, $hrValue) = each %ARGS)  {
+            my $fn = $package->can("do_$key");
+            next unless $fn;
+            $hrValue->{code} = $fn;
+        }
+    }
+} #import()
 
 # }}}1
 

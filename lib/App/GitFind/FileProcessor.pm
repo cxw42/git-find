@@ -49,7 +49,8 @@ sub process {
     goto &_process;
 } #process()
 
-# Internal: $self->_process($entry, $expr)
+# Internal: $self->_process($entry, $expr).  Called recursively to
+# handle subexpressions.
 sub _process {
     my ($self, $entry, $expr) = @_;
     my $func;   # What will handle the expression
@@ -59,9 +60,8 @@ sub _process {
 
     die "Invalid expression: " . ddc($expr) unless ref $expr eq 'HASH';
 
-    if($expr->{name}) {                 # Basic elements
-        $func = $self->can('do_' . $expr->{name});
-            # TODO remove the can() check once everything is implemented
+    if($expr->{code}) {                 # Basic elements
+        $func = $expr->{code};
         @arg = $entry;
         push @arg, @{$expr->{params}} if $expr->{params};
 
@@ -72,7 +72,6 @@ sub _process {
         $func = $self->can("process_$operation");
             # TODO remove the can() check once everything is implemented
         @arg = ($entry, $expr->{$operation});
-
     }
 
     die "I don't know how to process the expression: " . ddc($expr)
@@ -151,10 +150,7 @@ AND, OR, and SEQ, only a single expression is allowed.
 
 sub process_NOT {
     my ($self, $entry, $expr) = @_;
-    if(ref $expr eq 'ARRAY') {
-        require Carp;
-        Carp::croak "I can't take an array of expressions";
-    }
+    croak "I can't take an array of expressions" if ref $expr eq 'ARRAY';
 
     return !$self->_process($entry, $expr);
 } #process_NOT()
@@ -212,104 +208,6 @@ sub process_SEQ {
     $retval = $self->_process($entry, $_) foreach @{$lrExprs};
     return $retval;
 } #process_SEQ()
-
-# }}}1
-# === Tests/actions === {{{1
-# The order matches that in App::GitFind::Actions
-
-# No-argument tests {{{2
-
-# empty
-# executable
-
-sub do_false { false }
-
-# nogroup
-# nouser
-# readable
-
-sub do_true { true }
-
-# writeable
-
-# }}}2
-# No-argument actions {{{2
-
-# delete
-
-sub do_ls {
-    state $loaded = (require App::GitFind::FileStatLs, true);
-    print App::GitFind::FileStatLs::ls_stat($_[1]->path);
-    true
-}
-    # TODO optimization?  Pull the stat() results from $_[1] rather than
-    # re-statting.  May not be an issue.
-
-sub do_print {
-    $DB::single=1;
-    say $_[0]->dot_relative_path($_[1]);
-    true
-}
-
-sub do_print0 { print $_[0]->dot_relative_path($_[1]), "\0"; true }
-
-# prune
-
-# quit
-# This appears to be a GNU extension.  It should:
-#   - Finish any child processes
-#       (empirical): do not kill -9 ---
-#       find . -name LICENSE -exec sh -c 'sleep 2' {} + -o -name README -quit
-#       does not terminate the `sleep` early.
-#   - Run any queued -execdir {} + commands
-#   - (empirical) Do not run any queued -exec {} + commands?
-#       E.g., GNU
-#           find . \( -name LICENSE -quit -o -name README \) -exec ls -l {} +
-#       prints nothing.  However, POSIX
-#       (http://pubs.opengroup.org/onlinepubs/9699919799/utilities/find.html)
-#       says that "The utility ... shall be invoked ... after the last
-#       pathname in the set is aggregated, and shall be completed
-#       **before the find utility exits**" (emphasis added).
-
-
-# }}}2
-# One-argument index tests
-# TODO
-
-# }}}2
-# One-argument detailed tests
-# TODO
-
-# }}}2
-# -newerXY forms (all are one-argument detailed tests)
-# TODO
-
-# }}}2
-# -newerXY forms (all are one-argument detailed tests)
-# TODO
-
-# }}}2
-# Actions with a fixed number of arguments
-
-# fls file
-# fprint file
-# fprint0 file
-# fprintf file format
-
-sub do_printf { # -printf format.  No newline at the end.
-    my ($self, %args) = getparameters('self',[qw(entry format)], @_);
-    print "printf($args{format}, $args{entry})";    # TODO
-} #do_printf()
-
-# }}}2
-# Actions with a delimited argument list
-
-# exec
-# execdir
-# ok
-# okdir
-
-# }}}2
 
 # }}}1
 

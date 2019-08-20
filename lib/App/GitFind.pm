@@ -19,6 +19,7 @@ use Class::Tiny _qwc <<'EOT';
     _scan_submodules    # If truthy, scan submodules.
 EOT
 
+use App::GitFind::Actions;
 use App::GitFind::cmdline;
 use App::GitFind::FileProcessor;
 use Getopt::Long 2.34 ();
@@ -75,12 +76,12 @@ sub BUILD {
 
     # Handle default -print
     if(!$details->{expr}) {             # Default: -print
-        $details->{expr} = { name => 'print' };
+        $details->{expr} = App::GitFind::Actions::argdetails('print');
 
     } elsif(!$details->{saw_nonprune_action}) {      # With an expr: -print unless an action
                                         # other than -prune was given
         $details->{expr} = +{
-            AND => [ $details->{expr}, { name => 'print' } ]
+            AND => [ $details->{expr}, App::GitFind::Actions::argdetails('print') ]
         };
     }
 
