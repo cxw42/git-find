@@ -66,6 +66,7 @@ sub _process {
         push @arg, @{$expr->{params}} if $expr->{params};
 
     } else {                      # SEQ, AND, OR, NOT
+$DB::single = 1 if scalar keys %{$expr} > 1;
         die "Logical expression has more than one key: " . ddc($expr)
             if scalar keys %{$expr} > 1;
         my $operation = (keys %{$expr})[0];

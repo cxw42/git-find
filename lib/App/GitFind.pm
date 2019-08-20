@@ -216,7 +216,7 @@ sub _process_options {
     my $hrOpts;
     local *have = sub { $hrOpts->{switches}->{$_[0] // $_} };
 
-    $hrOpts = App::GitFind::cmdline::Parse($lrArgv)
+    $hrOpts = App::GitFind::cmdline::Parse($lrArgv, 0x1f)
         or die 'Could not parse options successfully';
 
     $VERBOSE = scalar @{$hrOpts->{switches}->{v} // []};
