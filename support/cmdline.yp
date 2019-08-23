@@ -88,7 +88,7 @@ sub _merge {
 
 cmdline:
                                     { +{} }     # empty
-        |   expr                    { +{ expr => $_[1] } }
+        |   maybeexprplus           { +{ expr => $_[1] } }
         |   switches_and_revs maybeexprplus
                                     { _merge($_[1], $_[2]) }
         ;
@@ -502,7 +502,7 @@ sub _report_error {
     my $got = $parser->YYCurtok || '<end of input>';
     my $val='';
     $val = ' (' . $parser->YYCurval . ')' if $parser->YYCurval;
-    print 'Syntax error: could not understand ', $got, $val, "\n";
+    die 'Syntax error: could not understand ', $got, $val, "\n";
     if(ref($parser->YYExpect) eq 'ARRAY') {
         print 'Expected one of: ', join(',', @{$parser->YYExpect}), "\n";
     }
