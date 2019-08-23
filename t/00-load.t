@@ -2,7 +2,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More;
+use Test2::V0;
 use Test::UseAllModules;
 
 BEGIN { all_uses_ok; }

@@ -188,9 +188,9 @@ my %opts = (
         #'Test::Deep' => '0.084',        # for superhashof
         #'Test::Directory' => '0.02',    # for subdirs
         #'Test::Exception' => '0',
-        'Test::More' => '0',
+        'Test2::V0' => '0.000125',      # the latest as of writing
         # Test::TempDir::Tiny?  If so, remove Test::Directory dependency?
-        'Test::UseAllModules' => '0.03',
+        'Test::UseAllModules' => '0.15',    # Test2 support
         #'Test::Warn' => '0.35',     # for metadata
     },
     PREREQ_PM => {

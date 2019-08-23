@@ -3,8 +3,6 @@ use warnings;
 use lib::relative '.';
 use TestKit;
 
-#use Data::Dumper;
-
 use App::GitFind::cmdline;
 my $p = \&App::GitFind::cmdline::Parse;
 
@@ -47,7 +45,7 @@ foreach(@{$ok->arr}) {
     my $name = "line $$_[0]: [" . join(' : ', @$lrArgs) . ']';
     #diag "======================================\nTrying $name";
     my $ast = $p->($lrArgs);    # add ,0x1f for full debug output
-    is_deeply $ast, $$_[2], $name;
+    is $ast, $$_[2], $name;
     #diag "GOT ", Dumper $ast;
     #diag "WANT ", Dumper $$_[2];
 }

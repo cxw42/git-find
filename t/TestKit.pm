@@ -8,7 +8,7 @@ use strict;
 use warnings;
 use Carp qw(croak);
 use List::AutoNumbered;
-use Test::More;
+use Test2::V0;
 
 sub true () { !!1 }
 sub false () { !!0 }
@@ -31,7 +31,7 @@ sub import {
     feature->import::into($target, ':5.10');
     Carp->import::into($target, qw(carp croak confess cluck));
     $_->import::into($target) foreach qw(strict warnings
-        List::AutoNumbered Test::More);
+        List::AutoNumbered Test2::V0);
 }
 
 # === Helpers for use in test files ===

@@ -1,7 +1,7 @@
 use 5.010;
 use strict;
 use warnings;
-use Test::More;
+use Test2::V0;
 
 use App::GitFind::Base;
 
@@ -10,7 +10,7 @@ sub run {
     my $name = shift @_;
 
     my $got = [_qwc $text];
-    is_deeply $got, [@_], $name;
+    is $got, [@_], $name;
 }
 
 run 'one element', 'single', <<'EOT';
