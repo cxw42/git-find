@@ -185,6 +185,7 @@ my %opts = (
         'List::Util' => '1.43',
         'Path::Class' => '0',
         #'Scalar::Util' => '0',
+        'Sub::Multi::Tiny' => '0.000012',
         #'Test::Deep' => '0.084',        # for superhashof
         #'Test::Directory' => '0.02',    # for subdirs
         #'Test::Exception' => '0',
@@ -192,6 +193,7 @@ my %opts = (
         # Test::TempDir::Tiny?  If so, remove Test::Directory dependency?
         'Test::UseAllModules' => '0.15',    # Test2 support
         #'Test::Warn' => '0.35',     # for metadata
+        'Types::Standard' => '1.004004'
     },
     PREREQ_PM => {
         #'Class::Method::Modifiers' => '2.10',   # most recent code change
@@ -265,6 +267,7 @@ my %opts = (
         #'Syntax::Construct' => '0.07',
         #'Type::Tiny' => '1.004004',
 
+        'vars' => '0',
         'vars::i' => '1.10',
     },
 
@@ -286,8 +289,12 @@ my %opts = (
             develop => {
                 requires => {
                     'App::RewriteVersion' => '0',   # for perl-bump-version
+                    'CPAN::Meta' => '0',
+                    'File::Spec' => '0',
                     'Module::Metadata' => '1.000016',
+                    'Perl::PrereqScanner' => '1.023',
                     'Test::Kwalitee' => '0',
+                    'Test::More' => '0',    # used in xt
                 },
                 suggests => {
                     'Devel::Cover' => '0',

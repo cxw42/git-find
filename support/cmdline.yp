@@ -18,6 +18,21 @@ use App::GitFind::Base;
 use App::GitFind::Actions;
 use Hash::Merge;
 
+# Debugging support
+BEGIN {
+    if($App::GitFind::cmdline::SHOW_AST // 0) {
+        require XXX;
+        XXX->import;
+    } else {    # !SHOW_AST - make YYY a passthrough
+        no strict 'refs';
+        *{'App::GitFind::cmdline::YYY'} = sub {
+            return wantarray ? @_ : $_[0];
+        };
+    }
+} #BEGIN
+
+BEGIN { YYY +{ 'YYY loaded' => 1 } }
+
 # }}}1
 # Documentation {{{1
 
@@ -36,6 +51,10 @@ And then:
     use App::GitFind::cmdline;
     App::GitFind::cmdline::Parse(\@ARGV);
 
+For debugging output, define C<$SHOW_AST> before the C<use> statement:
+
+    BEGIN { $App::GitFind::cmdline::SHOW_AST = 1; }
+
 =head1 FUNCTIONS
 
 =cut
@@ -53,6 +72,16 @@ sub _merge {
         $retval = $merger->merge($retval, $_);
     }
     return $retval;
+}
+
+# Check for { expr => FOO }
+sub _is_single_expr {
+    return false unless @_ eq 1;
+    my $h = $_[0];
+    return false unless ref $h eq 'HASH';
+    return false unless keys(%$h) eq 1;
+    return false unless (keys %$h)[0] eq 'expr';
+    return true;
 }
 
 # }}}1
@@ -87,40 +116,41 @@ sub _merge {
 # Rules
 
 cmdline:
-                                    { +{} }     # empty
-        |   maybeexprplus           { +{ expr => $_[1] } }
+                                    { YYY +{} }     # empty
+        |   maybeexprplus           { YYY $_[1] }
         |   switches_and_revs maybeexprplus
-                                    { _merge($_[1], $_[2]) }
+                                    { YYY _merge($_[1], $_[2]) }
         ;
 
 # Switches
 
-switches_and_revs:   SWITCH         { +{ switches => {$_[1]=>[true]} } }
+switches_and_revs:   SWITCH         { YYY +{ switches => {$_[1]=>[true]} } }
                                     # arrayref so @{{switches}->{foo}} will
                                     # always work.  That way we can test for
                                     # switches specified multiple times.
 
-        |   REV                     { +{ revs => [$_[1]] } }
+        |   REV                     { YYY +{ revs => [$_[1]] } }
         |   switches_and_revs SWITCH
-                                    { _merge($_[1], +{ switches => {$_[2]=>[true]} }) }
+                                    { YYY _merge($_[1], +{ switches => {$_[2]=>[true]} }) }
         |   switches_and_revs REV
-                                    { _merge($_[1], +{ revs => [$_[2]] }) }
+                                    { YYY _merge($_[1], +{ revs => [$_[2]] }) }
         ;
 
 # Expressions.  Since "and", "or", and "not" are keywords in Perl, the
-
+# hash keys for our operators are all upper-case.
 maybeexprplus:
-                                    { +{} }     # empty
-        | expr                      { +{ expr => $_[1] } }
-        | expr switches_and_revs    { +{ expr => $_[1], %{$_[2]} } }
+                                    { YYY +{} }     # empty
+        | expr                      { YYY +{ expr => $_[1] } }
+            #{ _is_single_expr($_[1]) ? $_[1] : +{ expr => $_[1] } }
+        | expr switches_and_revs    { YYY +{ expr => $_[1], %{$_[2]} } }
                                     # %$_[2]: inline the switches and revs
         ;
 
 # TODO once the parser is solid and the tests are written:
 # collapse consecutive elements of the same type into flat lists.
 expr:       element
-        |   expr COMMA expr         { +{ SEQ => [@_[1,3]] } }
-        |   expr OR expr            { +{ OR => [@_[1,3]] } }
+        |   expr COMMA expr         { YYY +{ SEQ => [@_[1,3]] } }
+        |   expr OR expr            { YYY +{ OR => [@_[1,3]] } }
                                     # "OR" because "or" is a Perl keyword
 
             # subsequent_expr is used so the parser will know when to reduce.
@@ -130,16 +160,16 @@ expr:       element
             # could be an expr.  A subsequent_expr cannot start with
             # a plain expr, so the parser has a reason to reduce the expr.
         |   expr subsequent_expr %prec AND
-                                    { +{ AND => [@_[1,2]] } }
-        |   expr AND expr           { +{ AND => [@_[1,3]] } }
-        |   NOT expr4               { +{ NOT => $_[2] } }
-        |   LPAREN expr RPAREN      { $_[2] }
+                                    { YYY +{ AND => [@_[1,2]] } }
+        |   expr AND expr           { YYY +{ AND => [@_[1,3]] } }
+        |   NOT expr4               { YYY +{ NOT => $_[2] } }
+        |   LPAREN expr RPAREN      { YYY $_[2] }
         ;
 
 subsequent_expr:    # Everything higher-precedence than AND
             element
-        |   NOT expr4               { +{ NOT => $_[2] } }
-        |   LPAREN expr RPAREN      { $_[2] }
+        |   NOT expr4               { YYY +{ NOT => $_[2] } }
+        |   LPAREN expr RPAREN      { YYY $_[2] }
         ;
 
 
@@ -147,7 +177,7 @@ element:    TEST
         |   ACTION
             {
                 $_[0]->YYData->{SAW_NON_PRUNE_ACTION} = true if $_[1] ne 'prune';
-                $_[1];
+                YYY $_[1];
             }
         ;
 

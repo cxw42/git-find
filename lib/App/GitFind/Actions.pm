@@ -45,6 +45,7 @@ sub _t { ($_[0] => { token => 'TEST', nparam => ($_[1]||0), index => ($_[2]||fal
 #   index:  (for tests only) Whether that test can be evaluated using only
 #           information from the index
 #   code:   A coderef --- the do_*() function that implements that test.
+#           The {code} field is added by _inflate(), called by import().
 
 my %ARGS=(
     # TODO find(1) positional options, global options?
@@ -298,21 +299,27 @@ sub import {
 
     if(!$inflated) {
         $inflated = true;
+        _inflate($package);
 
-        # Hook the validators into %ARGS
-        $ARGS{exec}->{validator} = \&_validate_exec;
-        $ARGS{execdir}->{validator} = $ARGS{exec}->{validator};
-        $ARGS{ok}->{validator} = \&_validate_ok;
-        $ARGS{okdir}->{validator} = $ARGS{ok}->{validator};
-
-        # Hook the actions into %ARGS
-        while (my ($key, $hrValue) = each %ARGS)  {
-            my $fn = $package->can("do_$key");
-            next unless $fn;
-            $hrValue->{code} = $fn;
-        }
     }
 } #import()
+
+# Inflate %ARGS.  Arg is the package providing the actions; no return.
+sub _inflate {
+    my $package = $_[0];
+    # Hook the validators into %ARGS
+    $ARGS{exec}->{validator} = \&_validate_exec;
+    $ARGS{execdir}->{validator} = $ARGS{exec}->{validator};
+    $ARGS{ok}->{validator} = \&_validate_ok;
+    $ARGS{okdir}->{validator} = $ARGS{ok}->{validator};
+
+    # Hook the actions into %ARGS
+    while (my ($key, $hrValue) = each %ARGS)  {
+        my $fn = $package->can("do_$key");
+        next unless $fn;
+        $hrValue->{code} = $fn;
+    }
+} #_inflate()
 
 # }}}1
 
