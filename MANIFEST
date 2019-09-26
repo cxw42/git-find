@@ -1,4 +1,5 @@
 Changes
+CONTRIBUTING.md
 lib/App/GitFind.pm
 lib/App/GitFind/Actions.pm
 lib/App/GitFind/Base.pm
@@ -30,6 +31,7 @@ t/11-lexer-rev.t
 t/20-parser-basic.t
 t/TestKit.pm
 xt/boilerplate.t
+xt/check-prereqs.t
 xt/manifest.t
 xt/pod-coverage.t
 xt/pod.t
