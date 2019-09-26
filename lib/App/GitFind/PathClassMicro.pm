@@ -3,7 +3,7 @@
 
 package App::GitFind::PathClassMicro;
 
-our $VERSION = '0.000001';  # TRIAL
+our $VERSION = '0.000002';
 
 ##############################################################################
 # Overall docs {{1

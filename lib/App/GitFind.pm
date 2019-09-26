@@ -29,7 +29,7 @@ use Iterator::Simple qw(ichain iflatten igrep imap iter iterator);
 #use Path::Class;   # TODO see if we can do without Path::Class for speed
 use App::GitFind::PathClassMicro;
 
-our $VERSION = '0.000001';  # TRIAL
+our $VERSION = '0.000002';
 
 # === Documentation === {{{1
 

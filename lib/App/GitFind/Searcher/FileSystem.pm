@@ -5,7 +5,7 @@ use 5.010;
 use strict;
 use warnings;
 
-our $VERSION = '0.000001'; # TRIAL
+our $VERSION = '0.000002';
 
 use parent 'App::GitFind::Searcher';
 use Class::Tiny qw(repo searchbase);

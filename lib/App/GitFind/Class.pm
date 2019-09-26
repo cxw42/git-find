@@ -6,7 +6,7 @@ use strict;
 use warnings;
 use App::GitFind::Base;
 
-our $VERSION = '0.000001'; # TRIAL
+our $VERSION = '0.000002';
 
 # No parent, so Class::Tiny will become the parent
 use Class::Tiny;

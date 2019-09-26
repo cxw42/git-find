@@ -9,7 +9,7 @@ use POSIX qw(strftime);
 
 
 require 5.006;
-our $VERSION = '0.11';
+our $VERSION = '0.000002';
 
 use parent 'Exporter';
 our @EXPORT      = qw(ls_stat format_mode);

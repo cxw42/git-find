@@ -8,7 +8,7 @@ use App::GitFind::Base;
 #use Path::Class;
 use App::GitFind::PathClassMicro;
 
-our $VERSION = '0.000001'; # TRIAL
+our $VERSION = '0.000002';
 
 use parent 'App::GitFind::Entry';
 
