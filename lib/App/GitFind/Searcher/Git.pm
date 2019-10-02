@@ -15,6 +15,7 @@ use Class::Tiny qw(repo searchbase),
 };
 
 use App::GitFind::Entry::GitIndex;
+use App::GitFind::PathClassMicro;
 use Git::Raw;
 use Git::Raw::Submodule;
 
@@ -68,17 +69,30 @@ sub _run {
                 vwarn { "Could not access submodule $_" };  # TODO die?
                 return undef;
             }
-            $submodules{$_} = $sm;
+
+            # Submodule names may not equal submodule paths, so get the path
+            # for lookup below.
+            my $sm_path =
+                App::GitFind::PathClassMicro::File->new($repo->workdir, $sm->path);
+            vlog { "Submodule $_ path", $sm->path, $sm_path } 2;
+            $submodules{$sm_path} = $sm;
         }
     }
 
     for my $idxe ($index->entries) {
         my $entry = App::GitFind::Entry::GitIndex->new(-obj=>$idxe,
             -repo=>$repo, -searchbase=>$self->searchbase);
+
+        # TODO check $idxe->mode to see if it's a submodule, and process accordingly
+
+        my $e_path =
+            App::GitFind::PathClassMicro::File->new($repo->workdir, $idxe->path);
+        vlog { 'Entry path', $idxe->path, $e_path, Mode => sprintf('%o', $idxe->mode) } 2;
+
         $callback->($entry);
         # TODO prune and other control
 
-        if(my $sm = $submodules{$idxe->path}) {
+        if(my $sm = $submodules{$e_path}) {
             vlog { "Entering submodule", $sm->name } 2;
             my $smrepo = $sm->open;
             die "Could not open repo for submodule @{[$smrepo->name]}: $@" if $@;
