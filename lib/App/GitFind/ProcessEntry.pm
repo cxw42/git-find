@@ -1,4 +1,4 @@
-package App::GitFind::FileProcessor;
+package App::GitFind::ProcessEntry;
 
 use 5.010;
 use strict;
@@ -20,12 +20,12 @@ use File::Spec; # TODO use facilities from A::GF::PathClassMicro instead?
 
 =head1 NAME
 
-App::GitFind::FileProcessor - Test a file against a set of criteria
+App::GitFind::ProcessEntry - Test a file against a set of criteria
 
 =head1 SYNOPSIS
 
     my $hrArgs = App::GitFind::cmdline::Parse(\@ARGV);
-    my $runner = App::GitFind::FileProcessor->new(-expr => $hrArgs->{expr});
+    my $runner = App::GitFind::ProcessEntry->new(-expr => $hrArgs->{expr});
     $runner->process($some_entry_or_other);
 
 =cut
@@ -211,7 +211,7 @@ sub process_SEQ {
 
 # }}}1
 
-1; # End of App::GitFind::FileProcessor
+1; # End of App::GitFind::ProcessEntry
 __END__
 # === Rest of the docs === {{{1
 

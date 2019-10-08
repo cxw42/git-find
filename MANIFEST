@@ -9,7 +9,7 @@ lib/App/GitFind/Entry.pm
 lib/App/GitFind/Entry/GitIndex.pm
 lib/App/GitFind/Entry/OnDisk.pm
 lib/App/GitFind/Entry/PathClass.pm
-lib/App/GitFind/FileProcessor.pm
+lib/App/GitFind/ProcessEntry.pm
 lib/App/GitFind/FileStatLs.pm
 lib/App/GitFind/PathClassMicro.pm
 lib/App/GitFind/Searcher.pm

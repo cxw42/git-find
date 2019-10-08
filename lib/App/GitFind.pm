@@ -21,7 +21,7 @@ EOT
 
 use App::GitFind::Actions;
 use App::GitFind::cmdline;
-use App::GitFind::FileProcessor;
+use App::GitFind::ProcessEntry;
 use Getopt::Long 2.34 ();
 use Git::Raw;
 use IO::Handle;
@@ -148,8 +148,8 @@ Does the work.  Call as C<< exit($obj->run()) >>.  Returns a shell exit code.
 
 sub run {
     my $self = shift;
-    my $runner = App::GitFind::FileProcessor->new(-expr => $self->_expr);
-    my $callback = $runner->callback($VERBOSE>=3);
+    my $runner = App::GitFind::ProcessEntry->new(-expr => $self->_expr);
+    my $per_entry_callback = $runner->callback($VERBOSE>=3);
 
     if($VERBOSE) {
         STDOUT->autoflush(true);
@@ -159,7 +159,7 @@ sub run {
     for my $rev (@{$self->_revs}) {
         my $searcher = $self->_make_searcher($rev, $self->_repo);
         # TODO? deduplicate?
-        $searcher->run($callback);
+        $searcher->run($per_entry_callback);
         # TODO? early stop?
     }
 
