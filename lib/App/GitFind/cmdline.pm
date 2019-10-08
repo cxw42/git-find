@@ -29,7 +29,8 @@ use Hash::Merge;
 
 # Debugging support
 BEGIN {
-    if($App::GitFind::cmdline::SHOW_AST // 0) {
+    if(($ENV{'APP_GITFIND_CMDLINE_SHOW_AST'} // 0) ||
+            ($App::GitFind::cmdline::SHOW_AST // 0)) {
         require XXX;
         XXX->import;
     } else {    # !SHOW_AST - make YYY a passthrough
@@ -107,257 +108,257 @@ sub new {
 [
 	{#State 0
 		ACTIONS => {
-			'REV' => 11,
-			'TEST' => 10,
-			'SWITCH' => 5,
-			'LPAREN' => 4,
-			'NOT' => 2,
-			'ACTION' => 3
+			'TEST' => 9,
+			'ACTION' => 7,
+			'LPAREN' => 5,
+			'SWITCH' => 2,
+			'REV' => 3,
+			'NOT' => 1
 		},
 		DEFAULT => -1,
 		GOTOS => {
-			'switches_and_revs' => 9,
-			'expr' => 6,
-			'cmdline' => 8,
-			'element' => 7,
-			'maybeexprplus' => 1
+			'expr' => 11,
+			'switches_and_revs' => 10,
+			'element' => 6,
+			'cmdline' => 4,
+			'maybeexprplus' => 8
 		}
 	},
 	{#State 1
-		DEFAULT => -2
-	},
-	{#State 2
 		ACTIONS => {
 			'expr4' => 12
 		}
 	},
+	{#State 2
+		DEFAULT => -4
+	},
 	{#State 3
-		DEFAULT => -22
+		DEFAULT => -5
 	},
 	{#State 4
 		ACTIONS => {
-			'TEST' => 10,
-			'LPAREN' => 4,
-			'ACTION' => 3,
-			'NOT' => 2
-		},
-		GOTOS => {
-			'element' => 7,
-			'expr' => 13
+			'' => 13
 		}
 	},
 	{#State 5
-		DEFAULT => -4
+		ACTIONS => {
+			'LPAREN' => 5,
+			'TEST' => 9,
+			'ACTION' => 7,
+			'NOT' => 1
+		},
+		GOTOS => {
+			'element' => 6,
+			'expr' => 14
+		}
 	},
 	{#State 6
-		ACTIONS => {
-			'SWITCH' => 5,
-			'OR' => 15,
-			'REV' => 11,
-			'TEST' => 10,
-			'ACTION' => 3,
-			'NOT' => 21,
-			'COMMA' => 20,
-			'LPAREN' => 19,
-			'AND' => 18
-		},
-		DEFAULT => -9,
-		GOTOS => {
-			'switches_and_revs' => 14,
-			'subsequent_expr' => 17,
-			'element' => 16
-		}
-	},
-	{#State 7
 		DEFAULT => -11
 	},
+	{#State 7
+		DEFAULT => -22
+	},
 	{#State 8
-		ACTIONS => {
-			'' => 22
-		}
+		DEFAULT => -2
 	},
 	{#State 9
+		DEFAULT => -21
+	},
+	{#State 10
 		ACTIONS => {
-			'ACTION' => 3,
-			'NOT' => 2,
-			'LPAREN' => 4,
-			'SWITCH' => 25,
-			'REV' => 24,
-			'TEST' => 10
+			'TEST' => 9,
+			'ACTION' => 7,
+			'LPAREN' => 5,
+			'REV' => 15,
+			'SWITCH' => 16,
+			'NOT' => 1
 		},
 		DEFAULT => -8,
 		GOTOS => {
-			'expr' => 6,
-			'element' => 7,
-			'maybeexprplus' => 23
+			'element' => 6,
+			'expr' => 11,
+			'maybeexprplus' => 17
 		}
 	},
-	{#State 10
-		DEFAULT => -21
-	},
 	{#State 11
-		DEFAULT => -5
+		ACTIONS => {
+			'LPAREN' => 20,
+			'SWITCH' => 2,
+			'REV' => 3,
+			'NOT' => 19,
+			'OR' => 25,
+			'AND' => 23,
+			'TEST' => 9,
+			'ACTION' => 7,
+			'COMMA' => 22
+		},
+		DEFAULT => -9,
+		GOTOS => {
+			'subsequent_expr' => 18,
+			'element' => 21,
+			'switches_and_revs' => 24
+		}
 	},
 	{#State 12
 		DEFAULT => -16
 	},
 	{#State 13
-		ACTIONS => {
-			'AND' => 18,
-			'LPAREN' => 19,
-			'COMMA' => 20,
-			'NOT' => 21,
-			'ACTION' => 3,
-			'OR' => 15,
-			'TEST' => 10,
-			'RPAREN' => 26
-		},
-		GOTOS => {
-			'subsequent_expr' => 17,
-			'element' => 16
-		}
+		DEFAULT => 0
 	},
 	{#State 14
 		ACTIONS => {
-			'REV' => 24,
-			'SWITCH' => 25
+			'NOT' => 19,
+			'LPAREN' => 20,
+			'ACTION' => 7,
+			'RPAREN' => 26,
+			'COMMA' => 22,
+			'AND' => 23,
+			'OR' => 25,
+			'TEST' => 9
 		},
-		DEFAULT => -10
+		GOTOS => {
+			'subsequent_expr' => 18,
+			'element' => 21
+		}
 	},
 	{#State 15
-		ACTIONS => {
-			'NOT' => 2,
-			'ACTION' => 3,
-			'LPAREN' => 4,
-			'TEST' => 10
-		},
-		GOTOS => {
-			'element' => 7,
-			'expr' => 27
-		}
+		DEFAULT => -7
 	},
 	{#State 16
-		DEFAULT => -18
+		DEFAULT => -6
 	},
 	{#State 17
-		DEFAULT => -14
+		DEFAULT => -3
 	},
 	{#State 18
-		ACTIONS => {
-			'LPAREN' => 4,
-			'TEST' => 10,
-			'NOT' => 2,
-			'ACTION' => 3
-		},
-		GOTOS => {
-			'element' => 7,
-			'expr' => 28
-		}
+		DEFAULT => -14
 	},
 	{#State 19
 		ACTIONS => {
-			'LPAREN' => 4,
-			'TEST' => 10,
-			'NOT' => 2,
-			'ACTION' => 3
-		},
-		GOTOS => {
-			'expr' => 29,
-			'element' => 7
+			'expr4' => 27
 		}
 	},
 	{#State 20
 		ACTIONS => {
-			'TEST' => 10,
-			'LPAREN' => 4,
-			'ACTION' => 3,
-			'NOT' => 2
+			'ACTION' => 7,
+			'NOT' => 1,
+			'LPAREN' => 5,
+			'TEST' => 9
 		},
 		GOTOS => {
-			'element' => 7,
-			'expr' => 30
+			'element' => 6,
+			'expr' => 28
 		}
 	},
 	{#State 21
-		ACTIONS => {
-			'expr4' => 31
-		}
+		DEFAULT => -18
 	},
 	{#State 22
-		DEFAULT => 0
+		ACTIONS => {
+			'NOT' => 1,
+			'ACTION' => 7,
+			'TEST' => 9,
+			'LPAREN' => 5
+		},
+		GOTOS => {
+			'element' => 6,
+			'expr' => 29
+		}
 	},
 	{#State 23
-		DEFAULT => -3
+		ACTIONS => {
+			'NOT' => 1,
+			'ACTION' => 7,
+			'LPAREN' => 5,
+			'TEST' => 9
+		},
+		GOTOS => {
+			'expr' => 30,
+			'element' => 6
+		}
 	},
 	{#State 24
-		DEFAULT => -7
+		ACTIONS => {
+			'REV' => 15,
+			'SWITCH' => 16
+		},
+		DEFAULT => -10
 	},
 	{#State 25
-		DEFAULT => -6
+		ACTIONS => {
+			'NOT' => 1,
+			'ACTION' => 7,
+			'LPAREN' => 5,
+			'TEST' => 9
+		},
+		GOTOS => {
+			'element' => 6,
+			'expr' => 31
+		}
 	},
 	{#State 26
 		DEFAULT => -17
 	},
 	{#State 27
-		ACTIONS => {
-			'TEST' => 10,
-			'NOT' => 21,
-			'ACTION' => 3,
-			'LPAREN' => 19,
-			'AND' => 18
-		},
-		DEFAULT => -13,
-		GOTOS => {
-			'element' => 16,
-			'subsequent_expr' => 17
-		}
+		DEFAULT => -19
 	},
 	{#State 28
 		ACTIONS => {
-			'ACTION' => 3,
-			'NOT' => 21,
-			'LPAREN' => 19,
-			'TEST' => 10
+			'NOT' => 19,
+			'LPAREN' => 20,
+			'COMMA' => 22,
+			'RPAREN' => 32,
+			'ACTION' => 7,
+			'TEST' => 9,
+			'AND' => 23,
+			'OR' => 25
 		},
-		DEFAULT => -15,
 		GOTOS => {
-			'subsequent_expr' => 17,
-			'element' => 16
+			'element' => 21,
+			'subsequent_expr' => 18
 		}
 	},
 	{#State 29
 		ACTIONS => {
-			'COMMA' => 20,
-			'ACTION' => 3,
-			'NOT' => 21,
-			'AND' => 18,
-			'LPAREN' => 19,
-			'RPAREN' => 32,
-			'TEST' => 10,
-			'OR' => 15
+			'LPAREN' => 20,
+			'NOT' => 19,
+			'AND' => 23,
+			'OR' => 25,
+			'TEST' => 9,
+			'ACTION' => 7
 		},
+		DEFAULT => -12,
 		GOTOS => {
-			'subsequent_expr' => 17,
-			'element' => 16
+			'element' => 21,
+			'subsequent_expr' => 18
 		}
 	},
 	{#State 30
 		ACTIONS => {
-			'NOT' => 21,
-			'ACTION' => 3,
-			'AND' => 18,
-			'LPAREN' => 19,
-			'TEST' => 10,
-			'OR' => 15
+			'NOT' => 19,
+			'LPAREN' => 20,
+			'ACTION' => 7,
+			'TEST' => 9
 		},
-		DEFAULT => -12,
+		DEFAULT => -15,
 		GOTOS => {
-			'subsequent_expr' => 17,
-			'element' => 16
+			'element' => 21,
+			'subsequent_expr' => 18
 		}
 	},
 	{#State 31
-		DEFAULT => -19
+		ACTIONS => {
+			'AND' => 23,
+			'TEST' => 9,
+			'ACTION' => 7,
+			'LPAREN' => 20,
+			'NOT' => 19
+		},
+		DEFAULT => -13,
+		GOTOS => {
+			'subsequent_expr' => 18,
+			'element' => 21
+		}
 	},
 	{#State 32
 		DEFAULT => -20
@@ -371,61 +372,61 @@ sub new {
 	[#Rule 1
 		 'cmdline', 0,
 sub
-#line 119 "support/cmdline.yp"
+#line 120 "support/cmdline.yp"
 { YYY +{} }
 	],
 	[#Rule 2
 		 'cmdline', 1,
 sub
-#line 120 "support/cmdline.yp"
+#line 121 "support/cmdline.yp"
 { YYY $_[1] }
 	],
 	[#Rule 3
 		 'cmdline', 2,
 sub
-#line 122 "support/cmdline.yp"
+#line 123 "support/cmdline.yp"
 { YYY _merge($_[1], $_[2]) }
 	],
 	[#Rule 4
 		 'switches_and_revs', 1,
 sub
-#line 127 "support/cmdline.yp"
+#line 128 "support/cmdline.yp"
 { YYY +{ switches => {$_[1]=>[true]} } }
 	],
 	[#Rule 5
 		 'switches_and_revs', 1,
 sub
-#line 132 "support/cmdline.yp"
+#line 133 "support/cmdline.yp"
 { YYY +{ revs => [$_[1]] } }
 	],
 	[#Rule 6
 		 'switches_and_revs', 2,
 sub
-#line 134 "support/cmdline.yp"
+#line 135 "support/cmdline.yp"
 { YYY _merge($_[1], +{ switches => {$_[2]=>[true]} }) }
 	],
 	[#Rule 7
 		 'switches_and_revs', 2,
 sub
-#line 136 "support/cmdline.yp"
+#line 137 "support/cmdline.yp"
 { YYY _merge($_[1], +{ revs => [$_[2]] }) }
 	],
 	[#Rule 8
 		 'maybeexprplus', 0,
 sub
-#line 142 "support/cmdline.yp"
+#line 143 "support/cmdline.yp"
 { YYY +{} }
 	],
 	[#Rule 9
 		 'maybeexprplus', 1,
 sub
-#line 143 "support/cmdline.yp"
+#line 144 "support/cmdline.yp"
 { YYY +{ expr => $_[1] } }
 	],
 	[#Rule 10
 		 'maybeexprplus', 2,
 sub
-#line 145 "support/cmdline.yp"
+#line 146 "support/cmdline.yp"
 { YYY +{ expr => $_[1], %{$_[2]} } }
 	],
 	[#Rule 11
@@ -434,37 +435,37 @@ sub
 	[#Rule 12
 		 'expr', 3,
 sub
-#line 152 "support/cmdline.yp"
+#line 153 "support/cmdline.yp"
 { YYY +{ SEQ => [@_[1,3]] } }
 	],
 	[#Rule 13
 		 'expr', 3,
 sub
-#line 153 "support/cmdline.yp"
+#line 154 "support/cmdline.yp"
 { YYY +{ OR => [@_[1,3]] } }
 	],
 	[#Rule 14
 		 'expr', 2,
 sub
-#line 163 "support/cmdline.yp"
+#line 164 "support/cmdline.yp"
 { YYY +{ AND => [@_[1,2]] } }
 	],
 	[#Rule 15
 		 'expr', 3,
 sub
-#line 164 "support/cmdline.yp"
+#line 165 "support/cmdline.yp"
 { YYY +{ AND => [@_[1,3]] } }
 	],
 	[#Rule 16
 		 'expr', 2,
 sub
-#line 165 "support/cmdline.yp"
+#line 166 "support/cmdline.yp"
 { YYY +{ NOT => $_[2] } }
 	],
 	[#Rule 17
 		 'expr', 3,
 sub
-#line 166 "support/cmdline.yp"
+#line 167 "support/cmdline.yp"
 { YYY $_[2] }
 	],
 	[#Rule 18
@@ -473,13 +474,13 @@ sub
 	[#Rule 19
 		 'subsequent_expr', 2,
 sub
-#line 171 "support/cmdline.yp"
+#line 172 "support/cmdline.yp"
 { YYY +{ NOT => $_[2] } }
 	],
 	[#Rule 20
 		 'subsequent_expr', 3,
 sub
-#line 172 "support/cmdline.yp"
+#line 173 "support/cmdline.yp"
 { YYY $_[2] }
 	],
 	[#Rule 21
@@ -488,7 +489,7 @@ sub
 	[#Rule 22
 		 'element', 1,
 sub
-#line 178 "support/cmdline.yp"
+#line 179 "support/cmdline.yp"
 {
                 $_[0]->YYData->{SAW_NON_PRUNE_ACTION} = true if $_[1] ne 'prune';
                 YYY $_[1];
@@ -499,7 +500,7 @@ sub
     bless($self,$class);
 }
 
-#line 184 "support/cmdline.yp"
+#line 185 "support/cmdline.yp"
 
 
 #############################################################################
@@ -850,8 +851,8 @@ sub _report_error {
     my $parser = shift;
     my $got = $parser->YYCurtok || '<end of input>';
     my $val='';
-    $val = ' (' . $parser->YYCurval . ')' if $parser->YYCurval;
-    die 'Syntax error: could not understand ', $got, $val, "\n";
+    $val = ' (saw: ' . YYY($parser->YYCurval) . ')' if $parser->YYCurval;
+    die "Syntax error: could not understand $got\n$val";
     if(ref($parser->YYExpect) eq 'ARRAY') {
         print 'Expected one of: ', join(',', @{$parser->YYExpect}), "\n";
     }

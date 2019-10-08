@@ -20,7 +20,10 @@ use Hash::Merge;
 
 # Debugging support
 BEGIN {
-    if($App::GitFind::cmdline::SHOW_AST // 0) {
+    if(
+        ($ENV{'APP_GITFIND_CMDLINE_SHOW_AST'} // 0) ||
+        ($App::GitFind::cmdline::SHOW_AST // 0)
+    ) {
         require XXX;
         XXX->import;
     } else {    # !SHOW_AST - make YYY a passthrough
@@ -51,9 +54,13 @@ And then:
     use App::GitFind::cmdline;
     App::GitFind::cmdline::Parse(\@ARGV);
 
-For debugging output, define C<$SHOW_AST> before the C<use> statement:
+For debugging output, set package variable C<$SHOW_AST> to a truthy value
+before the C<use> statement:
 
     BEGIN { $App::GitFind::cmdline::SHOW_AST = 1; }
+
+Or set the C<APP_GITFIND_CMDLINE_SHOW_AST> environment variable to a
+truthy value.
 
 =head1 FUNCTIONS
 
@@ -531,8 +538,8 @@ sub _report_error {
     my $parser = shift;
     my $got = $parser->YYCurtok || '<end of input>';
     my $val='';
-    $val = ' (' . $parser->YYCurval . ')' if $parser->YYCurval;
-    die 'Syntax error: could not understand ', $got, $val, "\n";
+    $val = ' (saw: ' . YYY($parser->YYCurval) . ')' if $parser->YYCurval;
+    die "Syntax error: could not understand $got\n$val";
     if(ref($parser->YYExpect) eq 'ARRAY') {
         print 'Expected one of: ', join(',', @{$parser->YYExpect}), "\n";
     }

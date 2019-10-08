@@ -67,6 +67,7 @@ foo
 foo.*
 TODO
 TODO*
+tags
 
 # Fatpacker
 fatpack*

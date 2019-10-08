@@ -194,11 +194,24 @@ sub argdetails {
 
 # }}}1
 # === Tests/actions === {{{1
-# The order matches that in App::GitFind::Actions
+# The order matches that above.
+
+=head1 TESTS/ACTIONS
+
+The C<do_*> functions implement the tests and actions.  They are called from
+L<App::GitFind::ProcessEntry/process>.  Each is invoked as:
+
+    my $processor = App::GitFind::ProcessEntry->new(...);
+    do_whatever $processor, $file_entry, $params_if_any;
+
+Each returns truthy or falsy as documented in find(1) or L<App::GitFind>.
+
+=cut
 
 # No-argument tests {{{2
 
-# empty
+sub do_empty { $_[1]->size == 0 }
+
 # executable
 
 sub do_false { false }

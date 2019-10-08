@@ -7,7 +7,7 @@ use warnings;
 our $VERSION = '0.000002';
 
 use parent 'App::GitFind::Class';
-use Class::Tiny qw(expr searchbase);
+use Class::Tiny qw(expr);
 
 # Imports
 use App::GitFind::Base;
@@ -20,7 +20,7 @@ use File::Spec; # TODO use facilities from A::GF::PathClassMicro instead?
 
 =head1 NAME
 
-App::GitFind::ProcessEntry - Test a file against a set of criteria
+App::GitFind::ProcessEntry - Test a file's entry against a set of criteria
 
 =head1 SYNOPSIS
 
@@ -28,10 +28,28 @@ App::GitFind::ProcessEntry - Test a file against a set of criteria
     my $runner = App::GitFind::ProcessEntry->new(-expr => $hrArgs->{expr});
     $runner->process($some_entry_or_other);
 
+=head1 FUNCTIONS
+
+=head2 Constructor
+
+The constructor (provided by L<App::GitFind::Class>) accepts one argument:
+C<expr>.  The C<expr> is an expression including tests and actions, e.g., as
+provided by L<App::GitFind::cmdline/Parse>.
+
 =cut
 
 # }}}1
 # === Main interpreter === {{{1
+
+# Coderefs of the handlers for the logical operators, and a regex to check
+# for a valid operator
+my (%_logops, $_valid_logops);
+BEGIN {
+    %_logops = (AND=>undef, OR=>undef, NOT=>undef, SEQ=>undef);
+    $_valid_logops = join '|', map { quotemeta } keys %_logops;
+    $_valid_logops = qr{^(?:$_valid_logops)$};
+    say STDERR "# $_valid_logops";
+}
 
 =head2 process
 
@@ -66,18 +84,21 @@ sub _process {
         push @arg, @{$expr->{params}} if $expr->{params};
 
     } else {                      # SEQ, AND, OR, NOT
+        my $operation = (keys %{$expr})[0];
+
+        # Assertions.  These can be removed in production.
+        die "Invalid logical expression $operation"
+            if $operation !~ $_valid_logops;
         die "Logical expression has more than one key: " . ddc($expr)
             if scalar keys %{$expr} > 1;
-        my $operation = (keys %{$expr})[0];
-        $func = $self->can("process_$operation");
-            # TODO remove the can() check once everything is implemented
+
+        # Set up to do the work
+        $func = $_logops{$operation};
         @arg = ($entry, $expr->{$operation});
     }
 
-    die "I don't know how to process the expression: " . ddc($expr)
-        unless $func;
-
-    return $self->$func(@arg);
+    @_ = ($self, @arg);
+    goto &$func;
 } #_process()
 
 =head2 callback
@@ -208,6 +229,20 @@ sub process_SEQ {
     $retval = $self->_process($entry, $_) foreach @{$lrExprs};
     return $retval;
 } #process_SEQ()
+
+# }}}1
+# === Constructor === {{{1
+
+=head2 BUILD
+
+Initializes internal structures.  Not to be called directly.
+
+=cut
+
+sub BUILD {
+    my $self = shift;
+    $_logops{$_} = $self->can("process_$_") foreach keys %_logops;
+} #BUILD()
 
 # }}}1
 
