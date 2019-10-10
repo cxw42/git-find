@@ -102,6 +102,15 @@ sub BUILD {
         die "I don't know how to search both ']]' and a Git rev at once."
     }
 
+    # Check for a working directory
+    my $wd = '.';
+    if($details->{switches}->{wd}) {
+        my @wd = @{$details->{switches}->{wd}};
+        die "--wd can only be specified once" if @wd>1;
+        $wd = $wd[0];
+    }
+    die "Working directory $wd isn't a readable directory" unless -d -r $wd;
+
     # Copy information into our instance fields
     $self->_expr($details->{expr});
     $self->_revs($details->{revs});
@@ -109,16 +118,16 @@ sub BUILD {
         App::GitFind::PathClassMicro::Dir->new($hrArgs->{searchbase})
     );
 
-    $self->_find_repo;
+    $self->_find_repo($wd);
 
 } #BUILD()
 
 # Initialize _repo and _repotop.  Dies on error.
 sub _find_repo {
-    my $self = shift;
+    my ($self, $wd) = @_;
     # Find the repo we're in.  If we're in a submodule, that will be the
     # repo of that submodule.
-    my $repo = eval { Git::Raw::Repository->discover('.'); };
+    my $repo = eval { Git::Raw::Repository->discover($wd); };
     die "Not in a Git repository: $@\n" if $@;
     $self->_repo($repo);
 

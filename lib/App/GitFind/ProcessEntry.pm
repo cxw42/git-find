@@ -48,7 +48,6 @@ BEGIN {
     %_logops = (AND=>undef, OR=>undef, NOT=>undef, SEQ=>undef);
     $_valid_logops = join '|', map { quotemeta } keys %_logops;
     $_valid_logops = qr{^(?:$_valid_logops)$};
-    say STDERR "# $_valid_logops";
 }
 
 =head2 process

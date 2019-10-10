@@ -31,8 +31,11 @@ Quick reference:
 
 =item Switches:
 
-Help (-?, --usage; -h, --help; --man); Version (-V, --version);
+B<Basic>: Help (-?, --usage; -h, --help; --man); Version (-V, --version);
 Verbosity (-v); Warnings (-W).
+
+B<Search scope>: Git directory (--git-dir), Working directory (--wd),
+Unrestricted search (-u).
 
 =item Revs:
 
@@ -57,9 +60,9 @@ not be interleaved in with the L</Expression>, if one is given.
 
 =over
 
-=item B<-?>, B<--usage>
+=item B<--git-dir> <dir>
 
-Print a brief usage reminder
+Use C<< <dir> >> as the C<.git> directory.  Not yet implemented.
 
 =item B<-h>, B<--help>
 
@@ -75,6 +78,10 @@ Unrestricted search.  Normally, git-find does not search ignored files.
 When this option is given, it does search those files.  However, it still
 skips C<.git/> directories.
 
+=item B<--usage>, B<-?>
+
+Print a brief usage reminder
+
 =item B<-v>
 
 Increase verbosity.  May be given multiple times.
@@ -82,6 +89,10 @@ Increase verbosity.  May be given multiple times.
 =item B<-V>, B<--version>
 
 Print version information and exit
+
+=item B<--wd> <dir>
+
+Use C<< <dir> >> as the working directory.  Not yet implemented.
 
 =item B<-W>, B<-Wname>
 

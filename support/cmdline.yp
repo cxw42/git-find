@@ -91,6 +91,19 @@ sub _is_single_expr {
     return true;
 }
 
+# Make a list describing a switch
+sub _switch {
+    my ($sw, $val);
+    if(ref $_[0] eq 'HASH') {
+        $sw = (keys %{$_[0]})[0];
+        $val = $_[0]->{$sw};
+    } else {
+        $sw = $_[0];
+        $val = true;
+    }
+    return ($sw, $val);
+} #_switch()
+
 # }}}1
 
 %}
@@ -131,14 +144,21 @@ cmdline:
 
 # Switches
 
-switches_and_revs:   SWITCH         { YYY +{ switches => {$_[1]=>[true]} } }
+switches_and_revs:   SWITCH         {
+                                        my ($sw, $val) = _switch($_[1]);
+                                        YYY +{ switches => {$sw=>[$val]} }
+                                    }
                                     # arrayref so @{{switches}->{foo}} will
                                     # always work.  That way we can test for
                                     # switches specified multiple times.
 
         |   REV                     { YYY +{ revs => [$_[1]] } }
         |   switches_and_revs SWITCH
-                                    { YYY _merge($_[1], +{ switches => {$_[2]=>[true]} }) }
+                                    {
+                                        my ($sw, $val) = _switch($_[2]);
+                                        YYY _merge($_[1],
+                                            +{ switches => {$sw=>[$val]} })
+                                    }
         |   switches_and_revs REV
                                     { YYY _merge($_[1], +{ revs => [$_[2]] }) }
         ;
@@ -435,9 +455,22 @@ sub _consume_switch {
     if($lrArgv->[0] =~ /^-([a-zA-z0-9\?])$/) {    # non-bundled switch
         shift @$lrArgv;
         return (SWITCH => $1)
-    } elsif($lrArgv->[0] =~ /^--?(help|man|usage|version)$/) {  # long switch
+
+    } elsif($lrArgv->[0] =~ /^--?(help|man|usage|version)$/) {
+        # long switch, no args
         shift @$lrArgv;
         return (SWITCH => $1);
+
+    } elsif($lrArgv->[0] =~ /^--?(git-dir|wd)=(.+)$/) {
+        # long switch, one arg, with equals sign
+        shift @$lrArgv;
+        return (SWITCH => {$1=>$2});
+
+    } elsif($lrArgv->[0] =~ /^--?(git-dir|wd)$/ && defined($lrArgv->[1])) {
+        # long switch, one arg, without equals sign
+        my $retval = {$1 => $lrArgv->[1]};
+        splice @$lrArgv, 0, 2;
+        return (SWITCH => $retval);
     }
 
     return ();
