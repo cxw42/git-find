@@ -94,6 +94,30 @@ May be a string or a Path::Class instance?
 
 sub path { ... }
 
+=head2 abs_path
+
+Absolute path of the entry.
+Must be overriden by subclasses.
+May be a string or a Path::Class instance?
+
+=cut
+
+sub abs_path { ... }
+
+=head2 pathclass
+
+Returns the appropriate L<App::GitFind::PathClassMicro> subclass
+of L</path> based on L</isdir>.
+
+=cut
+
+sub pathclass {
+    require App::GitFind::PathClassMicro;
+    return $_[0]->isdir
+        ? App::GitFind::PathClassMicro::Dir->new($_[0]->path)
+        : App::GitFind::PathClassMicro::File->new($_[0]->path);
+} #pathclass
+
 =head2 prune
 
 If this entry represents a directory, mark its children as not to be traversed.

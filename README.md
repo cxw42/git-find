@@ -19,8 +19,11 @@ Quick reference:
 
 - Switches:
 
-    Help (-?, --usage; -h, --help; --man); Version (-V, --version);
+    **Basic**: Help (-?, --usage; -h, --help; --man); Version (-V, --version);
     Verbosity (-v); Warnings (-W).
+
+    **Search scope**: Git directory (--git-dir), Working directory (--wd),
+    Unrestricted search (-u).
 
 - Revs:
 
@@ -41,9 +44,9 @@ Quick reference:
 These are options controlling the overall behaviour of git-find.  They may
 not be interleaved in with the ["Expression"](#expression), if one is given.
 
-- **-?**, **--usage**
+- **--git-dir** &lt;dir>
 
-    Print a brief usage reminder
+    Use `<dir>` as the `.git` directory.  Not yet implemented.
 
 - **-h**, **--help**
 
@@ -59,6 +62,10 @@ not be interleaved in with the ["Expression"](#expression), if one is given.
     When this option is given, it does search those files.  However, it still
     skips `.git/` directories.
 
+- **--usage**, **-?**
+
+    Print a brief usage reminder
+
 - **-v**
 
     Increase verbosity.  May be given multiple times.
@@ -66,6 +73,10 @@ not be interleaved in with the ["Expression"](#expression), if one is given.
 - **-V**, **--version**
 
     Print version information and exit
+
+- **--wd** &lt;dir>
+
+    Use `<dir>` as the working directory.  Not yet implemented.
 
 - **-W**, **-Wname**
 

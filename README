@@ -16,8 +16,11 @@ OPTIONS AND ARGUMENTS
     Quick reference:
 
     Switches:
-        Help (-?, --usage; -h, --help; --man); Version (-V, --version);
+        Basic: Help (-?, --usage; -h, --help; --man); Version (-V, --version);
         Verbosity (-v); Warnings (-W).
+
+        Search scope: Git directory (--git-dir), Working directory (--wd),
+        Unrestricted search (-u).
 
     Revs:
         Anything accepted by git-rev-parse(1).
@@ -34,8 +37,8 @@ DESCRIPTION
     These are options controlling the overall behaviour of git-find.  They may
     not be interleaved in with the "Expression", if one is given.
 
-    -?, --usage
-        Print a brief usage reminder
+    --git-dir <dir>
+        Use "<dir>" as the ".git" directory.  Not yet implemented.
 
     -h, --help
         Print basic help
@@ -47,10 +50,16 @@ DESCRIPTION
         files.  When this option is given, it does search those files. 
         However, it still skips ".git/" directories.
 
+    --usage, -?
+        Print a brief usage reminder
+
     -v  Increase verbosity.  May be given multiple times.
 
     -V, --version
         Print version information and exit
+
+    --wd <dir>
+        Use "<dir>" as the working directory.  Not yet implemented.
 
     -W, -Wname
         Enable warning name, or all warnings if no name is given.

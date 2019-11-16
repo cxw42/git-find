@@ -6,7 +6,7 @@ package App::GitFind::PathClassMicro;
 our $VERSION = '0.000002';
 
 ##############################################################################
-# Overall docs {{1
+# Overall docs {{{1
 
 =head1 NAME
 
@@ -34,7 +34,7 @@ Multiple packages are combined in this file.
 
 # }}}1
 ##############################################################################
-# Entity {{1
+# Entity {{{1
 
 package App::GitFind::PathClassMicro::Entity;
 use strict;

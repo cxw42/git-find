@@ -21,7 +21,7 @@ use Class::Tiny::Immutable {
     isdir => sub { $_[0]->obj->is_dir },
     name => sub { $_[0]->obj->basename },
     path => sub { $_[0]->obj->relative($_[0]->searchbase) },
-
+    abs_path => sub { $_[0]->obj->absolute },
 };
 
 # Docs {{{1

@@ -212,17 +212,18 @@ Each returns truthy or falsy as documented in find(1) or L<App::GitFind>.
 
 sub do_empty { $_[1]->size == 0 }
 
-# executable
+sub do_executable { -x $_[1]->abs_path }
 
 sub do_false { false }
 
 # nogroup
 # nouser
-# readable
+
+sub do_readable { -r $_[1]->abs_path }
 
 sub do_true { true }
 
-# writeable
+sub do_writeable { -x $_[1]->abs_path }
 
 # }}}2
 # No-argument actions {{{2
@@ -264,23 +265,78 @@ sub do_print0 { print $_[0]->dot_relative_path($_[1]), "\0"; true }
 
 
 # }}}2
-# One-argument index tests
+# One-argument index tests {{{2
+# TODO
+
+#cmin
+#cnewer
+#ctime
+
+#gid
+#group
+#ilname
+#iname
+#inum
+#ipath
+sub do_regex;   # forward
+
+sub do_iregex {
+    $_[2] = "(?i)$_[2]";
+    goto &do_regex;
+}
+
+#iwholename
+
+sub do_level {
+    my (undef, $entry, $number) = @_;
+    my @components = $entry->pathclass->components;
+    vlog { Testing => $entry->path, "against level $number; has @{[scalar @components]} components" };
+    # TODO some entries have leading ./ and some don't - regularize this.
+    return $number == @components;
+}
+
+#mmin
+#mtime
+
+sub do_name {
+    my $name = $_[1]->name;
+    ...     # TODO File::Globstar
+} #do_name
+
+#path
+
+sub do_regex {
+    my (undef, $entry, $regex) = @_;
+
+    my $re = eval("qr\x{01}^" . $regex . "\$\x{01}");
+        # \x{01} is a character not likely to be in the string
+    if($@ || ref $re ne 'Regexp') {
+        die "Could not understand `$regex' as a regex: $@";
+    }
+    return $entry->path =~ $re;
+} #do_regex
+
+#size
+#type
+#uid
+
+#user
+#wholename
+
+# }}}2
+# One-argument detailed tests {{{2
 # TODO
 
 # }}}2
-# One-argument detailed tests
+# -newerXY forms (all are one-argument detailed tests) {{{2
 # TODO
 
 # }}}2
-# -newerXY forms (all are one-argument detailed tests)
+# -newerXY forms (all are one-argument detailed tests) {{{2
 # TODO
 
 # }}}2
-# -newerXY forms (all are one-argument detailed tests)
-# TODO
-
-# }}}2
-# Actions with a fixed number of arguments
+# Actions with a fixed number of arguments {{{2
 
 # fls file
 # fprint file
@@ -293,7 +349,7 @@ sub do_printf { # -printf format.  No newline at the end.
 } #do_printf()
 
 # }}}2
-# Actions with a delimited argument list
+# Actions with a delimited argument list {{{2
 
 # exec
 # execdir

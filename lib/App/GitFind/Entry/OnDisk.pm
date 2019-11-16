@@ -20,7 +20,7 @@ use Class::Tiny
 use Class::Tiny::Immutable {
     _lstat => sub { $_[0]->obj->stat_ret },
 
-    # Lazy App::GitFind::PathClassMicro;
+    # Lazy App::GitFind::PathClassMicro
     _pathclass => sub {
         ($_[0]->isdir   ? 'App::GitFind::PathClassMicro::Dir'
                         : 'App::GitFind::PathClassMicro::File'
@@ -36,6 +36,7 @@ use Class::Tiny::Immutable {
     },
 
     path => sub { $_[0]->_pathclass->relative($_[0]->searchbase) },
+    abs_path => sub { $_[0]->_pathclass->absolute },
 };
 
 # Docs {{{1

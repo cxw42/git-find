@@ -27,6 +27,7 @@ use Class::Tiny::Immutable {
     isdir => sub { false },     # Git doesn't store dirs, only files.
     name => sub { $_[0]->_pathclass->basename },
     path => sub { $_[0]->_pathclass->relative($_[0]->searchbase) },
+    abs_path => sub { $_[0]->_pathclass->absolute },    # TODO check if this is right
 };
 
 # Docs {{{1
